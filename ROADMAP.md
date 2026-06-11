@@ -273,6 +273,10 @@ Alle content staat in `content/custom/mikeshop/src/main/kotlin/org/rsmod/content
   Status 2026-06-11: hoogste-wave persistentie uitgevoerd via varp `9007 mike_arena_best_wave`;
   `::arenastats` toont je record en `::arena` meldt/updated nieuwe records. `compileKotlin`,
   `packCache` en `:server:app:installDist` groen; W1/W2 herstart op 43594/43595 zonder errors.
+  Status 2026-06-12: hiscore-bord v1 uitgevoerd met `::arenatop`: leest `characters.varps`
+  uit de huidige world-DB via server Database, parse't JSON met Jackson en toont top 20 in de
+  bestaande `questjournal` UI. Online spelerrecord wordt mee gemerged zodat je laatste wave
+  zichtbaar is voor logout.
 - ☐ **Collection log**: openen kan al met één regel (`ifOpenOverlay(interfaces.collection, eventBus)`
   — zie `content/interfaces/journal-tab/.../SummarySideScript.kt:78`), maar de invulling is
   cs2/cache-gedreven → eigen simpele variant maken met quest-log-UI-techniek is praktischer.
