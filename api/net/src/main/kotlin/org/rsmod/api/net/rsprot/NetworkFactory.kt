@@ -36,7 +36,8 @@ constructor(
     private val js5Groups = Js5GroupResponseProvider(store)
     private val npcSupplier = NpcSupplier.provide()
 
-    override val ports: List<Int> = listOf(43594)
+    // Per-world bind port via env (e.g. world 2 -> 43595) so worlds can run side-by-side.
+    override val ports: List<Int> = listOf(System.getenv("RSMOD_PORT")?.toIntOrNull() ?: 43594)
 
     override val supportedClientTypes: List<OldSchoolClientType> =
         listOf(OldSchoolClientType.DESKTOP)

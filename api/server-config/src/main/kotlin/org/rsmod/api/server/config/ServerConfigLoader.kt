@@ -19,8 +19,13 @@ public class ServerConfigLoader @Inject constructor(@Toml private val objectMapp
             create(file)
         }
 
-    public fun load(file: Path): ServerConfig =
-        objectMapper.readValue(file.toFile(), ServerConfig::class.java)
+    public fun load(file: Path): ServerConfig {
+        val base = objectMapper.readValue(file.toFile(), ServerConfig::class.java)
+        // Env overrides let a second world run without editing server.toml. Default unchanged.
+        val world = System.getenv("RSMOD_WORLD")?.toIntOrNull() ?: base.world
+        val realm = System.getenv("RSMOD_REALM") ?: base.realm
+        return base.copy(world = world, realm = realm)
+    }
 
     public fun create(file: Path): ServerConfig {
         require(file.notExists()) { "File already exists: ${file.toAbsolutePath()}" }

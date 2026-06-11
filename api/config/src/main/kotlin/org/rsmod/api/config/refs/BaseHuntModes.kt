@@ -14,4 +14,5 @@ object BaseHuntModes : HuntModeReferences() {
     val aggressive_melee = find("aggressive_melee")
     val aggressive_melee_extra = find("aggressive_melee_extra")
     val aggressive_ranged = find("aggressive_ranged")
+    val mike_boss_aggro = find("mike_boss_aggro")
 }

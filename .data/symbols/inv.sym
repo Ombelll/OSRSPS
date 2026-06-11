@@ -934,3 +934,11 @@
 933	pub_auburnvale
 934	pub_nemus
 935	dom_lootpile_during
+2000	mike_shop
+2001	supply_shop
+2002	general_store
+2003	potion_shop
+2004	pk_melee_shop
+2005	pk_ranged_shop
+2006	pk_magic_shop
+2007	pk_supply_shop

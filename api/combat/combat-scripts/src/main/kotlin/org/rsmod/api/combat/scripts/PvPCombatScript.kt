@@ -38,6 +38,9 @@ constructor(
     private val runes: MagicRuneManager,
     private val autocast: AutocastWeapons,
 ) : PluginScript() {
+    // PvP staat alleen aan op de PvP-wereld (env RSMOD_WORLD=2); andere werelden zijn veilig.
+    private val pvpWorld = System.getenv("RSMOD_WORLD") == "2"
+
     override fun ScriptContext.startup() {
         onApPlayer2 { attemptCombatAp(it.target) }
         onOpPlayer2 { attemptCombatOp(it.target) }
@@ -103,6 +106,12 @@ constructor(
     }
 
     private fun ProtectedAccess.canAttack(target: Player): Boolean {
+        // Spelers aanvallen kan alleen op de PvP-wereld (RSMOD_WORLD=2); wereld 1 is veilig.
+        if (!pvpWorld) {
+            mes("You can only attack other players on the PvP world (World 2).")
+            clearPendingAction()
+            return false
+        }
         val weapon = objTypes.getOrNull(player.righthand)
         if (weapon != null && weapon.isCategoryType(categories.dinhs_bulwark)) {
             val attackStyle = styles.get(player)

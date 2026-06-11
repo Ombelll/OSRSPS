@@ -108,5 +108,16 @@ internal object HuntBuilds : HuntModeBuilder() {
             findKeepHunting = false
             findNewMode = NpcMode.ApPlayer2
         }
+
+        build("mike_boss_aggro") {
+            type = HuntType.Player
+            checkVis = HuntVis.LineOfSight
+            checkNotTooStrong = HuntCheckNotTooStrong.Off
+            checkNotCombat = varps.lastcombat
+            checkNotCombatSelf = varns.lastcombat
+            checkNotBusy = false
+            findKeepHunting = true
+            findNewMode = NpcMode.OpPlayer2
+        }
     }
 }

@@ -110,8 +110,10 @@ class AccountLoadResponseHook(
         // This can occur under extreme circumstances (e.g., power outage) where a new player's
         // character row was created, but their game state was never saved due to a crash before
         // the save could occur (either via logout or another persistence mechanism).
+        // In devMode we tolerate partial saves: the server is force-killed/restarted constantly,
+        // which leaves lastLogout == null, and we don't want that to block re-login every time.
         val isPartialSave = response.account.lastLogout == null
-        if (isPartialSave) {
+        if (isPartialSave && !config.devMode) {
             logger.error {
                 "Player has never logged out properly - login aborted: ${response.account}"
             }
@@ -190,14 +192,17 @@ class AccountLoadResponseHook(
     }
 
     private fun Player.applyConfigTransforms(config: RealmConfig) {
+        // Auto-assign a display name to ANY account (new or existing) that still has none. Older
+        // characters created with a blank name otherwise can never chat (and the "Configure Display
+        // name" client button has no server handler on this revision).
+        if (config.autoAssignDisplayNames && displayName.isBlank()) {
+            displayName = username.toDisplayName()
+        }
         if (!newAccount) {
             return
         }
         coords = config.spawnCoord
         xpRate = config.baseXpRate
-        if (config.autoAssignDisplayNames) {
-            displayName = username.toDisplayName()
-        }
         if (config.devMode) {
             modLevel = devModeModLevel
         }

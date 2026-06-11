@@ -33,5 +33,7 @@ internal object VarpBuilds : VarpBuilder() {
         build("generic_temp_coords_65529") { temporary = true }
         build("inv_capacity_65530")
         build("generic_storage_65531")
+        build("mike_pk_points")
+        build("mike_pk_kills")
     }
 }

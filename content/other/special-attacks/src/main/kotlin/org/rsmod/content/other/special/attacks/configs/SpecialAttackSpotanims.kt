@@ -9,4 +9,5 @@ object SpecialAttackSpotanims : SpotanimReferences() {
     val lumber_up_silver = find("crystal_smallaxe_swoosh_spotanim", 139193746)
     val fishstabber_silver = find("sp_attackglow_crystal", 8691321)
     val dragon_longsword = find("sp_attack_cleave_spotanim", 13013927)
+    val dragon_dagger = find("sp_attack_puncture_spotanim")
 }

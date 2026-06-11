@@ -60,8 +60,10 @@ public object StandardGpCostCalculations {
                 baseCost = baseCost,
                 exchangePercentage = sellPercentage,
                 changePercentage = changePercentage,
-                cap = BUY_FROM_SHOP_MIN_FRACTION,
-                minCost = 1,
+                // Floor 0 i.p.v. 0.3/min 1: shops met buyPercentage 0 worden hierdoor ECHT gratis
+                // (bv. de PK-stores). Shops met een hogere buyPercentage betalen gewoon dat %.
+                cap = 0.0,
+                minCost = 0,
             )
         return parameters.firstObjPrice
     }
