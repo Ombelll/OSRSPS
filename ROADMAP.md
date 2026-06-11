@@ -277,9 +277,10 @@ Alle content staat in `content/custom/mikeshop/src/main/kotlin/org/rsmod/content
   uit de huidige world-DB via server Database, parse't JSON met Jackson en toont top 20 in de
   bestaande `questjournal` UI. Online spelerrecord wordt mee gemerged zodat je laatste wave
   zichtbaar is voor logout.
-- ☐ **Collection log**: openen kan al met één regel (`ifOpenOverlay(interfaces.collection, eventBus)`
-  — zie `content/interfaces/journal-tab/.../SummarySideScript.kt:78`), maar de invulling is
-  cs2/cache-gedreven → eigen simpele variant maken met quest-log-UI-techniek is praktischer.
+- done **Collection log**: eigen simpele variant via `::collection` met questjournal-UI.
+  Status 2026-06-12: uitgevoerd in `CollectionLog.kt`: toont Arena best wave/champion, fire cape
+  in inventory, quest-completions, diary reward, boss kill milestones en PK kills/points. Gebruikt
+  bestaande varps + `PvmProgress`; geen packCache nodig.
 - ☐ Daily events: MOTD-gestuurd + `globalXpRate` in de realms-tabel (kolom bestaat al).
 
 ### FASE 4 — Quests & UI ◐
