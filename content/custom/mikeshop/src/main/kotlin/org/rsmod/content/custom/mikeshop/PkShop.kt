@@ -193,6 +193,11 @@ internal object PkObjs : ObjReferences() {
     val divine_combat = find("4dosedivinecombat")
     val super_attack = find("4dose2attack")
     val super_strength = find("4dose2strength")
+    // Cosmetics:
+    val santa_hat = find("santa_hat")
+    val robinhoodhat = find("robinhoodhat")
+    val halloweenmask_red = find("halloweenmask_red")
+    val black_partyhat = find("black_partyhat")
 }
 
 internal object PkMeleeShopBuilder : InvBuilder() {

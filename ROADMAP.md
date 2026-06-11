@@ -338,10 +338,14 @@ Alle content staat in `content/custom/mikeshop/src/main/kotlin/org/rsmod/content
   spiegelen vereist handmatige `UpdateInvFull(-(combined), 32858, ...)`-write. Altijd accept-
   flags resetten bij elke offer-mutatie (anti-switch-scam). `tradeoffer` is Perm → login-restore
   toevoegen (gestrande items terug naar inv).
-- deels Geld-sinks: instance-fees (Fight Caves entree), cosmetica in PK-puntenwinkel.
+- ✅ Geld-sinks: instance-fees (Fight Caves entree), cosmetica in PK-puntenwinkel.
   Status 2026-06-11: Fight Caves entree uitgevoerd in `FightCaves.kt`: `::fightcaves`
   vraagt nu 100.000 coins via `invCoinTotal`/`invTakeFee` voordat de teleport naar de cave
   gebeurt. Geen betaling als de cave bezet is of als dezelfde speler al binnen is.
+  `compileKotlin` + `:server:app:installDist` groen; W1/W2 herstart en luisteren op 43594/43595.
+  Status 2026-06-12: `::pkspend` uitgebreid met categorie-menu's en cosmetic rewards
+  (Santa hat, Robin hood hat, red halloween mask, black partyhat) als PK-punten sink. Rewards
+  gebruiken nu strict inventory-add; bij volle inventory worden geen PK-punten afgeschreven.
   `compileKotlin` + `:server:app:installDist` groen; W1/W2 herstart en luisteren op 43594/43595.
 
 ### FASE 6 — Multiplayer & sociaal ☐

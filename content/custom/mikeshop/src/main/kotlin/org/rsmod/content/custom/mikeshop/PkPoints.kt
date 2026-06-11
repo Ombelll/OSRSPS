@@ -11,6 +11,7 @@ import org.rsmod.api.player.protect.ProtectedAccessLauncher
 import org.rsmod.api.player.vars.intVarp
 import org.rsmod.api.script.onCommand
 import org.rsmod.game.entity.Player
+import org.rsmod.game.type.obj.ObjType
 import org.rsmod.plugin.scripts.PluginScript
 import org.rsmod.plugin.scripts.ScriptContext
 
@@ -19,7 +20,7 @@ import org.rsmod.plugin.scripts.ScriptContext
  * PvpKillTracker + PlayerDeath). Hier check je je stats en geef je punten uit.
  *
  *  - ::pkpoints : toont je kills / punten / huidige streak
- *  - ::pkspend  : puntenwinkel (coins, potion-packs, dragon claws)
+ *  - ::pkspend  : puntenwinkel (coins, potion-packs, dragon claws, cosmetics)
  *
  * Kills en punten zijn persistent; killstreak is in-memory per server-sessie.
  */
@@ -54,37 +55,78 @@ constructor(
         val balance = player.pkPoints
         val pick =
             choice5(
-                "250,000 coins (10 pts)",
+                "Coins",
                 1,
-                "1,000,000 coins (35 pts)",
+                "Supplies",
                 2,
-                "5x super combat potion (15 pts)",
+                "Combat gear",
                 3,
-                "Dragon claws (50 pts)",
+                "Cosmetics",
                 4,
                 "Nothing",
                 0,
                 title = "PK Point Shop - you have $balance points",
             )
-        val cost =
-            when (pick) {
-                1 -> 10
-                2 -> 35
-                3 -> 15
-                4 -> 50
-                else -> return
-            }
-        if (player.pkPoints < cost) {
-            mes("Not enough PK points (need $cost, you have $balance). Get killing!")
+        when (pick) {
+            1 -> coinsMenu()
+            2 -> claimReward("5x super combat potion", cost = 15, obj = PkObjs.super_combat, count = 5)
+            3 -> claimReward("Dragon claws", cost = 50, obj = PkObjs.dragon_claws)
+            4 -> cosmeticsMenu()
+        }
+    }
+
+    private suspend fun ProtectedAccess.coinsMenu() {
+        val pick =
+            choice3(
+                "250,000 coins (10 pts)",
+                1,
+                "1,000,000 coins (35 pts)",
+                2,
+                "Back",
+                0,
+                title = "PK Point Shop - Coins",
+            )
+        when (pick) {
+            1 -> claimReward("250,000 coins", cost = 10, obj = objs.coins, count = 250_000)
+            2 -> claimReward("1,000,000 coins", cost = 35, obj = objs.coins, count = 1_000_000)
+        }
+    }
+
+    private suspend fun ProtectedAccess.cosmeticsMenu() {
+        val pick =
+            choice5(
+                "Santa hat (75 pts)",
+                1,
+                "Robin hood hat (100 pts)",
+                2,
+                "Red halloween mask (125 pts)",
+                3,
+                "Black partyhat (200 pts)",
+                4,
+                "Back",
+                0,
+                title = "PK Cosmetics - you have ${player.pkPoints} points",
+            )
+        when (pick) {
+            1 -> claimReward("Santa hat", cost = 75, obj = PkObjs.santa_hat)
+            2 -> claimReward("Robin hood hat", cost = 100, obj = PkObjs.robinhoodhat)
+            3 -> claimReward("Red halloween mask", cost = 125, obj = PkObjs.halloweenmask_red)
+            4 -> claimReward("Black partyhat", cost = 200, obj = PkObjs.black_partyhat)
+        }
+    }
+
+    private fun ProtectedAccess.claimReward(label: String, cost: Int, obj: ObjType, count: Int = 1) {
+        val balance = player.pkPoints
+        if (balance < cost) {
+            mes("Not enough PK points for $label (need $cost, you have $balance).")
             return
         }
-        player.pkPoints -= cost
-        when (pick) {
-            1 -> player.invAdd(player.inv, objs.coins, 250_000, strict = false)
-            2 -> player.invAdd(player.inv, objs.coins, 1_000_000, strict = false)
-            3 -> player.invAdd(player.inv, PkObjs.super_combat, 5, strict = false)
-            4 -> player.invAdd(player.inv, PkObjs.dragon_claws, 1, strict = false)
+        val add = player.invAdd(player.inv, obj, count, strict = true)
+        if (!add.success) {
+            mes("Not enough inventory space for $label.")
+            return
         }
-        mes("Reward claimed! Remaining PK points: ${player.pkPoints}.")
+        player.pkPoints = balance - cost
+        mes("$label claimed! Remaining PK points: ${player.pkPoints}.")
     }
 }
