@@ -35,5 +35,6 @@ internal object VarpBuilds : VarpBuilder() {
         build("generic_storage_65531")
         build("mike_pk_points")
         build("mike_pk_kills")
+        build("mike_arena_best_wave")
     }
 }

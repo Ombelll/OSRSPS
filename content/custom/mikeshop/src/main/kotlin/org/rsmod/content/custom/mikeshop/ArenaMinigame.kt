@@ -3,9 +3,11 @@ package org.rsmod.content.custom.mikeshop
 import jakarta.inject.Inject
 import org.rsmod.api.config.refs.objs
 import org.rsmod.api.config.refs.queues
+import org.rsmod.api.config.refs.varps
 import org.rsmod.api.death.NpcDeath
 import org.rsmod.api.npc.access.StandardNpcAccess
 import org.rsmod.api.player.output.mes
+import org.rsmod.api.player.vars.intVarp
 import org.rsmod.api.repo.npc.NpcRepository
 import org.rsmod.api.repo.obj.ObjRepository
 import org.rsmod.api.script.onCommand
@@ -33,8 +35,9 @@ internal object ArenaState {
     class Run(var wave: Int, var alive: Int)
 
     val runs = HashMap<Player, Run>()
-    var bestWave = HashMap<Player, Int>()
 }
+
+private var Player.arenaBestWave: Int by intVarp(varps.mike_arena_best_wave)
 
 /**
  * COMBAT ARENA (minigame) - ::arena
@@ -76,9 +79,15 @@ constructor(
                 }
                 ArenaState.runs[player] = ArenaState.Run(wave = 0, alive = 0)
                 player.mes("=== COMBAT ARENA ===")
+                player.mes("Your best wave: ${player.arenaBestWave}/$maxWave.")
                 player.mes("Survive 10 waves! Stand in OPEN ground. Type ::arenaquit to leave.")
                 spawnWave(player, 1)
             }
+        }
+
+        onCommand("arenastats") {
+            desc = "Show your best Combat Arena wave"
+            cheat { player.mes("Combat Arena best wave: ${player.arenaBestWave}/$maxWave.") }
         }
 
         onCommand("arenaquit") {
@@ -150,8 +159,10 @@ constructor(
         val cleared = run.wave
         objRepo.add(objs.coins, coords, 200, hero, count = cleared * 5000)
         hero.mes("Wave $cleared cleared! +${cleared * 5000} coins.")
-        val best = ArenaState.bestWave.getOrDefault(hero, 0)
-        if (cleared > best) ArenaState.bestWave[hero] = cleared
+        if (cleared > hero.arenaBestWave) {
+            hero.arenaBestWave = cleared
+            hero.mes("New Combat Arena record: wave $cleared/$maxWave!")
+        }
         if (cleared >= maxWave) {
             objRepo.add(objs.coins, coords, 300, hero, count = 1_000_000)
             hero.mes("=== ARENA CHAMPION! All $maxWave waves cleared! Bonus 1,000,000 coins! ===")

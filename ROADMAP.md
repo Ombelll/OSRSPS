@@ -270,6 +270,9 @@ Alle content staat in `content/custom/mikeshop/src/main/kotlin/org/rsmod/content
     instance uitlogt wordt op rauwe x/z gesaved → onAreaExit-teleport dekt dit (vuurt vóór save).
 - ☐ **Arena v2**: hoogste-wave persistent (varp-recept B3), hiscore-bord op de hub (quest-log-
   UI-techniek, Fase 4), multi-speler-waves (occupant-lijst i.p.v. één Run per speler).
+  Status 2026-06-11: hoogste-wave persistentie uitgevoerd via varp `9007 mike_arena_best_wave`;
+  `::arenastats` toont je record en `::arena` meldt/updated nieuwe records. `compileKotlin`,
+  `packCache` en `:server:app:installDist` groen; W1/W2 herstart op 43594/43595 zonder errors.
 - ☐ **Collection log**: openen kan al met één regel (`ifOpenOverlay(interfaces.collection, eventBus)`
   — zie `content/interfaces/journal-tab/.../SummarySideScript.kt:78`), maar de invulling is
   cs2/cache-gedreven → eigen simpele variant maken met quest-log-UI-techniek is praktischer.
@@ -335,7 +338,11 @@ Alle content staat in `content/custom/mikeshop/src/main/kotlin/org/rsmod/content
   spiegelen vereist handmatige `UpdateInvFull(-(combined), 32858, ...)`-write. Altijd accept-
   flags resetten bij elke offer-mutatie (anti-switch-scam). `tradeoffer` is Perm → login-restore
   toevoegen (gestrande items terug naar inv).
-- ☐ Geld-sinks: instance-fees (Fight Caves entree), cosmetica in PK-puntenwinkel.
+- deels Geld-sinks: instance-fees (Fight Caves entree), cosmetica in PK-puntenwinkel.
+  Status 2026-06-11: Fight Caves entree uitgevoerd in `FightCaves.kt`: `::fightcaves`
+  vraagt nu 100.000 coins via `invCoinTotal`/`invTakeFee` voordat de teleport naar de cave
+  gebeurt. Geen betaling als de cave bezet is of als dezelfde speler al binnen is.
+  `compileKotlin` + `:server:app:installDist` groen; W1/W2 herstart en luisteren op 43594/43595.
 
 ### FASE 6 — Multiplayer & sociaal ☐
 - ☐ **Structurele 2-client-test** (W2): PvP-duel → PK-punten checken; samen arena; daarna pas trade.

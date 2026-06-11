@@ -108,6 +108,7 @@ constructor(
     private val start = CoordGrid(0, 37, 79, 45, 61)
     private val outside = CoordGrid(0, 49, 54, 28, 30)
     private val maxWave = 6
+    private val entranceFee = 100_000
 
     private val spawnOffsets =
         listOf(5 to 5, -5 to 5, 5 to -5, -5 to -5, 0 to 7, 7 to 0, 0 to -7, -7 to 0)
@@ -131,7 +132,11 @@ constructor(
                     player.mes("The Fight Caves are occupied by ${run.player.displayName}.")
                     return@cheat
                 }
-                protectedAccess.launch(player) { telejump(start) }
+                if (run != null && run.player === player) {
+                    player.mes("You're already in the Fight Caves.")
+                    return@cheat
+                }
+                protectedAccess.launch(player) { enterPaidCaves() }
             }
         }
 
@@ -161,6 +166,19 @@ constructor(
         FightCaveState.run = FightCaveState.Run(player)
         mes("The heat of the Fight Caves surrounds you. Type ::fightquit to leave.")
         spawnWave(1)
+    }
+
+    private suspend fun ProtectedAccess.enterPaidCaves() {
+        if (invCoinTotal() < entranceFee) {
+            mes("The Fight Caves entrance fee is $entranceFee coins.")
+            return
+        }
+        if (!invTakeFee(entranceFee)) {
+            mes("The Fight Caves entrance fee is $entranceFee coins.")
+            return
+        }
+        mes("You pay $entranceFee coins to enter the Fight Caves.")
+        telejump(start)
     }
 
     private suspend fun ProtectedAccess.exitArena() {
