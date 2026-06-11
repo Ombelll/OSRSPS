@@ -7,6 +7,8 @@ dependencies {
     implementation(projects.api.db)
     implementation(projects.api.parsers.jackson)
     implementation(projects.api.parsers.json)
+    implementation(projects.api.realm)
+    implementation(projects.api.realmConfig)
     implementation(projects.api.script)
     implementation(projects.api.scriptAdvanced)
     implementation(projects.api.type.typeBuilders)

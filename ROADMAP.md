@@ -281,7 +281,11 @@ Alle content staat in `content/custom/mikeshop/src/main/kotlin/org/rsmod/content
   Status 2026-06-12: uitgevoerd in `CollectionLog.kt`: toont Arena best wave/champion, fire cape
   in inventory, quest-completions, diary reward, boss kill milestones en PK kills/points. Gebruikt
   bestaande varps + `PvmProgress`; geen packCache nodig.
-- ☐ Daily events: MOTD-gestuurd + `globalXpRate` in de realms-tabel (kolom bestaat al).
+- done Daily events: MOTD/global XP preset-menu via `::daily`, status via `::event`.
+  Status 2026-06-12: uitgevoerd in `DailyEvents.kt`: presets Normal 1x, Double XP 2x,
+  Skilling Boost 3x en PvP Weekend 1.5x. Schrijft `login_broadcast` +
+  `global_xp_rate_in_hundreds` naar `realms`, update live realm config en zet online players
+  direct op de nieuwe global XP-rate. Geen packCache nodig.
 
 ### FASE 4 — Quests & UI ◐
 - ✅ Quest-engine (varps, multi-stage, ::questlog chat-versie)
