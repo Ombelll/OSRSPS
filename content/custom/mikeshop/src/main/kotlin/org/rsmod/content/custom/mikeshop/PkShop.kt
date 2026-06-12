@@ -1,12 +1,15 @@
 package org.rsmod.content.custom.mikeshop
 
 import jakarta.inject.Inject
+import org.rsmod.api.config.refs.interfaces
 import org.rsmod.api.player.output.mes
 import org.rsmod.api.player.protect.ProtectedAccess
 import org.rsmod.api.player.protect.ProtectedAccessLauncher
 import org.rsmod.api.repo.loc.LocRepository
 import org.rsmod.api.repo.npc.NpcRepository
 import org.rsmod.api.script.onCommand
+import org.rsmod.api.script.onOpLoc1
+import org.rsmod.api.script.onOpLoc2
 import org.rsmod.api.script.onOpNpc1
 import org.rsmod.api.script.onPlayerLogin
 import org.rsmod.api.shops.Shops
@@ -417,6 +420,8 @@ constructor(
         onOpNpc1(PkClerkNpcs.supply) {
             openFree(player, "Free PK Supplies Shop", PkShopInvs.supply)
         }
+        onOpLoc2(PkLocs.bankbooth) { openEdgevilleBank() }
+        onOpLoc1(PkLocs.noticeboard) { readEdgevilleNoticeboard(it.loc.coords) }
 
         onCommand("pkshop") {
             desc = "Open the free PK shop menu (Melee/Ranged/Magic/Supplies)"
@@ -473,6 +478,23 @@ constructor(
             changePercentage = 0.0,
         )
         player.mes("Everything here is free - gear up and PK!")
+    }
+
+    private fun ProtectedAccess.openEdgevilleBank() {
+        ifOpenMainSidePair(main = interfaces.bank_main, side = interfaces.bank_side)
+    }
+
+    private suspend fun ProtectedAccess.readEdgevilleNoticeboard(coords: CoordGrid) {
+        if (coords != PK_EDGE.translate(-1, 2)) {
+            return
+        }
+        mesbox(
+            "Edgeville PvP hub<br>" +
+                "::pkshop opens free gear shops.<br>" +
+                "::pkpoints shows your kills and points.<br>" +
+                "::pkspend opens the cosmetics shop.<br>" +
+                "Skull prevention is respected; wilderness level ranges apply north of the ditch."
+        )
     }
 
     /** Spawnt de PK-shopkeeper + een banker in Edgeville (PvP-world). NPC-spawns try/catch. */

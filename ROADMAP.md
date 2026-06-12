@@ -154,8 +154,9 @@ Multi-world, login-robuustheid, RSProx-targets, **watchdog (start-worlds.ps1) + 
 ### FASE 1 — Werelden & identiteit ◐
 - ✅ W1 veilig (PvP-gate) · PK-punten/streaks **persistent** (varps 9004/9005) · PK-cosmetics ·
   gratis PK-shops als NPC's · world-gating
-- ☐ **Edgeville-polish**: bank booth-loc bij de PK-NPC's (recept B7; loc-naam verifiëren via
-  B12), uitleg-bord/lederboard via tekst-UI (B10).
+- ✅ **Edgeville-polish**: PK-hub spawnt shop-NPC's, banker, bank booth en noticeboard. De spawned
+  bank booth opent bank op op2; het noticeboard toont PK-commands, skull-prevention en wildy-range
+  uitleg.
 
 ### FASE 2 — Combat-diepte ◐
 - ✅ PvN+PvP · protect prayers (werkten al) · **aggressie live** (`mike_boss_aggro` op de bosses,
