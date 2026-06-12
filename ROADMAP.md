@@ -366,8 +366,11 @@ Alle content staat in `content/custom/mikeshop/src/main/kotlin/org/rsmod/content
   data is logout-vers (geen autosave). Koppelbaar aan bestaande dashboard-kennis.
 - ☐ PM/friends/clanchat — engine-onderzoek nodig (nog niet gedaan).
 
-### FASE 7 — Polish & beheer ☐
-- ☐ Watchdog + backups (Fase 0-items) eerst; daarna log-rotatie.
+### FASE 7 — Polish & beheer ◐
+- done Watchdog + backups + log-rotatie.
+  Status 2026-06-12: `rotate-logs.ps1` toegevoegd. Archiveert `.data/logs/*.log` boven
+  10MB naar `.data/logs/archive/` en verwijdert archieven ouder dan 14 dagen. `start-worlds.ps1`
+  roept de rotatie automatisch aan voordat de watchdog worlds start/checkt.
 - ☐ Performance-test met 3+ clients.
 - ☐ **Niet publiek hosten** (Jagex-IP; lokale leer-/testserver).
 

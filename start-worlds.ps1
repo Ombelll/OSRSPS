@@ -9,8 +9,13 @@ $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Bash = "C:\Program Files\Git\bin\bash.exe"
 $LogDir = Join-Path $Root ".data\logs"
 $App = "./server/app/build/install/app/bin/app"
+$RotateLogs = Join-Path $Root "rotate-logs.ps1"
 
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
+
+if (Test-Path -LiteralPath $RotateLogs) {
+    powershell -NoProfile -ExecutionPolicy Bypass -File $RotateLogs | Out-Null
+}
 
 $Worlds = @(
     @{
