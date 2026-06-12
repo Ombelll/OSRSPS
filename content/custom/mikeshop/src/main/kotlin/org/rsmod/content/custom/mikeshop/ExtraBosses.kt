@@ -119,6 +119,7 @@ constructor(
         val boss = Npc(npcTypes[type], coords.translate(2, 2))
         boss.mode = NpcMode.None
         npcRepo.add(boss, duration = 1000)
+        boss.startBossMechanics()
     }
 
     private suspend fun StandardNpcAccess.demonLoot() {

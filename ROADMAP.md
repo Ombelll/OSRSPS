@@ -237,7 +237,10 @@ Alle content staat in `content/custom/mikeshop/src/main/kotlin/org/rsmod/content
   `puncture` anim/spotanim, nieuwe `DragonDaggerSpecialAttack.kt` met dubbele melee-hit en registratie
   in `SpecialAttackModule`. `compileKotlin` + `:server:app:installDist` groen; W1/W2 startup groen.
 - ☐ Wilderness-regels (skull, item-on-death keep-3, wildy-levels) — groter; eerst bovenstaande.
-- ☐ Boss-mechanics v2 (fases/AoE) — bouwen op aggressie zodra die werkt.
+- done Boss-mechanics v2: fase-aankondigingen + periodieke AoE-pulse voor endgame bosses.
+  Status 2026-06-12: uitgevoerd in `BossMechanics.kt`: Nightmare/Frost Wyrm/Crimson Wyrm/
+  Ancient One krijgen 50%/25%-faseberichten en een herhalende close-range typeless AoE-pulse
+  via `generic_queue10`. Boss-spawns starten de mechanic-loop; script-only, geen packCache nodig.
 
 ### FASE 3 — Minigames & endgame ◐
 - ✅ Arena (10 waves) · ✅ dice/flip/slots/mystery · ✅ progressie/achievements/diary

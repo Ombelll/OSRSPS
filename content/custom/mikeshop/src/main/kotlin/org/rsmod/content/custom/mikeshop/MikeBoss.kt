@@ -66,6 +66,7 @@ constructor(
                 val boss = Npc(npcTypes[BossNpcs.green_dragon], player.coords.translate(2, 2))
                 boss.mode = NpcMode.None
                 npcRepo.add(boss, duration = 1000)
+                boss.startBossMechanics()
                 player.mes("Mike the Destroyer awakens beside you! Attack to begin the fight.")
             }
         }
