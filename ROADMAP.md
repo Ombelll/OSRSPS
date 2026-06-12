@@ -213,7 +213,9 @@ Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met bo
   event activeert; boss-fases zichtbaar bij HP-drempels; `::pkspend` cosmetics.
 - ☐ **Structurele 2-client-test** (W2): PvP-duel → `::pkpoints` klopt bij beide; samen arena;
   uitloggen/herstarten → punten persistent.
-- ☐ **Hiscores-webpagina**: leest `game.db` read-only (SQL in sectie A); data is logout-vers.
+- ✅ **Hiscores-webpagina**: `hiscores-web.ps1` start een lokale read-only pagina op
+  `http://127.0.0.1:8088`; leest W1 `game.db` en W2 `game_w2.db`, met world/skill/search/top-filter.
+  Data blijft logout-vers.
 - ☐ PM/friends/clanchat — engine-onderzoek nodig (nog niet gedaan).
 
 ### FASE 7 — Polish & beheer ◐
@@ -230,7 +232,7 @@ Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met bo
 4. **Multi-speler-waves** (Fase 3) — bouwt op de 2-client-test.
 5. **NPC-GE v2 persistentie** (Fase 5) — Flyway-migratie, geen client-werk.
 6. **Trade Plan A** (Fase 5) — medium; client-onbekenden eerst met 2 clients verifiëren.
-7. **Hiscores-web + wilderness-regels** — parallel oppakbaar.
+7. **Wilderness-regels** — parallel oppakbaar na/naast de client-verificatie.
 
 ## E. CHECKLIST VOOR ELKE WIJZIGING (dwingend)
 1. Item/npc/loc-namen exact gevalideerd in de .sym (B12)?
