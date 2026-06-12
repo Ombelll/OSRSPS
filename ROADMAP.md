@@ -192,10 +192,9 @@ Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met bo
 ### FASE 5 — Economie ◐
 - ✅ 8 winkels · PK-puntenwinkel/cosmetics · geld-sinks (instance-fees, cosmetica) ·
   **NPC-Grand Exchange** (`::npcge`: orderboek met escrow, prijs-matching, collect — in-memory)
-- ☐ **NPC-GE v2 (persistentie)**: Flyway-migratie `api/db/src/main/resources/db/migration/
-  V7__ge_orders.sql` (account_id, obj_id, side, remaining, price) + laden/saven van
-  `NpcExchangeBook` via `GameDbManager.request` — anders zijn orders + escrow weg bij herstart
-  (nu: bewust geaccepteerd risico).
+- ✅ **NPC-GE v2 (persistentie)**: Flyway-migratie `api/db/src/main/resources/db/migration/
+  V7__ge_orders.sql` + lazy load/save van `NpcExchangeBook`. Open buy/sell-orders, collect-coins
+  en collect-items blijven nu in de world-DB staan na restart.
 - ☐ **Echte speler-trade (Plan A — ná de 2-client-test).** Server-kant bestaat: Trade =
   `onOpPlayer4` (`api/script-advanced`; labels in `content/other/login/LoginScript.kt:136`),
   offer-inv `invs.tradeoffer` (90), interfaces `trademain`(335)/`tradeside`(336)/`tradeconfirm`(334),

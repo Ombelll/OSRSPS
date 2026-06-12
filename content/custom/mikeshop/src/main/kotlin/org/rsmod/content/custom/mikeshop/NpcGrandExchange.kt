@@ -1,6 +1,8 @@
 package org.rsmod.content.custom.mikeshop
 
 import jakarta.inject.Inject
+import org.rsmod.api.db.Database
+import org.rsmod.api.db.DatabaseConnection
 import org.rsmod.api.config.refs.objs
 import org.rsmod.api.market.MarketPrices
 import org.rsmod.api.player.protect.ProtectedAccess
@@ -33,6 +35,12 @@ private data class ExchangeOrder(
 private data class ExchangeCollect(
     var coins: Int = 0,
     val items: MutableMap<ObjType, Int> = linkedMapOf(),
+)
+
+private data class ExchangeSnapshot(
+    val orders: List<ExchangeOrder>,
+    val collect: Map<String, ExchangeCollect>,
+    val nextOrderId: Int,
 )
 
 private object NpcExchangeBook {
@@ -78,6 +86,35 @@ private object NpcExchangeBook {
         }
     }
 
+    @Synchronized
+    fun load(snapshot: ExchangeSnapshot) {
+        buyOrders.clear()
+        sellOrders.clear()
+        collect.clear()
+        for (order in snapshot.orders) {
+            when (order.side) {
+                ExchangeSide.Buy -> buyOrders += order
+                ExchangeSide.Sell -> sellOrders += order
+            }
+        }
+        for ((owner, pending) in snapshot.collect) {
+            collect[owner] = pending.copy(items = pending.items.toMutableMap())
+        }
+        nextOrderId = snapshot.nextOrderId.coerceAtLeast(1)
+    }
+
+    @Synchronized
+    fun snapshot(): ExchangeSnapshot {
+        val orders =
+            (buyOrders + sellOrders)
+                .filter { it.remaining > 0 }
+                .sortedBy { it.id }
+                .map { it.copy() }
+        val pending =
+            collect.mapValues { (_, value) -> value.copy(items = value.items.toMutableMap()) }
+        return ExchangeSnapshot(orders, pending, nextOrderId)
+    }
+
     private fun match(): Int {
         var matched = 0
         val buys = buyOrders.sortedWith(compareByDescending<ExchangeOrder> { it.price }.thenBy { it.id })
@@ -116,10 +153,13 @@ class NpcGrandExchange
 @Inject
 constructor(
     private val protectedAccess: ProtectedAccessLauncher,
+    private val database: Database,
     private val marketPrices: MarketPrices,
     private val objTypes: ObjTypeList,
     private val objRepo: ObjRepository,
 ) : PluginScript() {
+    private var loaded = false
+
     override fun ScriptContext.startup() {
         onCommand("npcge") {
             desc = "Open the simple NPC Grand Exchange"
@@ -129,6 +169,7 @@ constructor(
     }
 
     private suspend fun ProtectedAccess.openExchange() {
+        ensureLoaded()
         when (
             choice5(
                 "Place buy order",
@@ -164,7 +205,9 @@ constructor(
             mesbox("You need $total coins to place that buy order.")
             return
         }
-        mesbox(NpcExchangeBook.placeBuy(ownerKey(player), type, price, count))
+        val message = NpcExchangeBook.placeBuy(ownerKey(player), type, price, count)
+        saveBook()
+        mesbox(message)
     }
 
     private suspend fun ProtectedAccess.placeSellOrder() {
@@ -176,7 +219,9 @@ constructor(
             mesbox("You do not have ${type.name} x$count to sell.")
             return
         }
-        mesbox(NpcExchangeBook.placeSell(ownerKey(player), type, price, count))
+        val message = NpcExchangeBook.placeSell(ownerKey(player), type, price, count)
+        saveBook()
+        mesbox(message)
     }
 
     private suspend fun ProtectedAccess.collectExchange() {
@@ -191,6 +236,7 @@ constructor(
         for ((obj, count) in collect.items) {
             invAddOrDrop(objRepo, obj, count)
         }
+        saveBook()
         mesbox("Collected ${collect.coins} coins and ${collect.items.values.sum()} item(s).")
     }
 
@@ -211,4 +257,128 @@ constructor(
     }
 
     private fun ownerKey(player: Player): String = player.displayName.lowercase()
+
+    private suspend fun ensureLoaded() {
+        if (loaded) {
+            return
+        }
+        val snapshot = database.withTransaction { connection -> connection.loadExchange(objTypes) }
+        NpcExchangeBook.load(snapshot)
+        loaded = true
+    }
+
+    private suspend fun saveBook() {
+        val snapshot = NpcExchangeBook.snapshot()
+        database.withTransaction { connection -> connection.saveExchange(snapshot) }
+    }
+
+    private fun DatabaseConnection.loadExchange(objTypes: ObjTypeList): ExchangeSnapshot {
+        val orders = mutableListOf<ExchangeOrder>()
+        prepareStatement(
+                """
+                    SELECT id, owner, side, obj_id, obj_name, price, remaining
+                    FROM npc_ge_orders
+                    ORDER BY id
+                """
+                    .trimIndent()
+            )
+            .use { statement ->
+                statement.executeQuery().use { rows ->
+                    while (rows.next()) {
+                        val type = objTypes[rows.getInt("obj_id")] ?: continue
+                        orders +=
+                            ExchangeOrder(
+                                rows.getInt("id"),
+                                rows.getString("owner"),
+                                ExchangeSide.valueOf(rows.getString("side")),
+                                type.toHashedType(),
+                                rows.getString("obj_name"),
+                                rows.getInt("price"),
+                                rows.getInt("remaining"),
+                            )
+                    }
+                }
+            }
+
+        val collect = linkedMapOf<String, ExchangeCollect>()
+        prepareStatement("SELECT owner, coins FROM npc_ge_collect").use { statement ->
+            statement.executeQuery().use { rows ->
+                while (rows.next()) {
+                    collect[rows.getString("owner")] = ExchangeCollect(coins = rows.getInt("coins"))
+                }
+            }
+        }
+        prepareStatement("SELECT owner, obj_id, count FROM npc_ge_collect_items").use { statement ->
+            statement.executeQuery().use { rows ->
+                while (rows.next()) {
+                    val owner = rows.getString("owner")
+                    val type = objTypes[rows.getInt("obj_id")] ?: continue
+                    collect.getOrPut(owner) { ExchangeCollect() }.items[type.toHashedType()] =
+                        rows.getInt("count")
+                }
+            }
+        }
+        val nextId = (orders.maxOfOrNull { it.id } ?: 0) + 1
+        return ExchangeSnapshot(orders, collect, nextId)
+    }
+
+    private fun DatabaseConnection.saveExchange(snapshot: ExchangeSnapshot) {
+        prepareStatement("DELETE FROM npc_ge_collect_items").use { it.executeUpdate() }
+        prepareStatement("DELETE FROM npc_ge_collect").use { it.executeUpdate() }
+        prepareStatement("DELETE FROM npc_ge_orders").use { it.executeUpdate() }
+
+        prepareStatement(
+                """
+                    INSERT INTO npc_ge_orders (id, owner, side, obj_id, obj_name, price, remaining)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """
+                    .trimIndent()
+            )
+            .use { statement ->
+                for (order in snapshot.orders) {
+                    statement.setInt(1, order.id)
+                    statement.setString(2, order.owner)
+                    statement.setString(3, order.side.name)
+                    statement.setInt(4, order.obj.id)
+                    statement.setString(5, order.name)
+                    statement.setInt(6, order.price)
+                    statement.setInt(7, order.remaining)
+                    statement.addBatch()
+                }
+                statement.executeBatch()
+            }
+
+        prepareStatement("INSERT INTO npc_ge_collect (owner, coins) VALUES (?, ?)").use { statement ->
+            for ((owner, pending) in snapshot.collect) {
+                if (pending.coins <= 0 && pending.items.isEmpty()) {
+                    continue
+                }
+                statement.setString(1, owner)
+                statement.setInt(2, pending.coins)
+                statement.addBatch()
+            }
+            statement.executeBatch()
+        }
+
+        prepareStatement(
+                """
+                    INSERT INTO npc_ge_collect_items (owner, obj_id, obj_name, count)
+                    VALUES (?, ?, ?, ?)
+                """
+                    .trimIndent()
+            )
+            .use { statement ->
+                for ((owner, pending) in snapshot.collect) {
+                    for ((obj, count) in pending.items) {
+                        val type = objTypes[obj]
+                        statement.setString(1, owner)
+                        statement.setInt(2, obj.id)
+                        statement.setString(3, type.name)
+                        statement.setInt(4, count)
+                        statement.addBatch()
+                    }
+                }
+                statement.executeBatch()
+            }
+    }
 }
