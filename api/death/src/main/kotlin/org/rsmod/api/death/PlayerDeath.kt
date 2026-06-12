@@ -2,6 +2,7 @@ package org.rsmod.api.death
 
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
+import org.rsmod.api.config.constants
 import org.rsmod.api.config.refs.components
 import org.rsmod.api.config.refs.jingles
 import org.rsmod.api.config.refs.midis
@@ -14,9 +15,14 @@ import org.rsmod.api.player.output.mes
 import org.rsmod.api.player.protect.ProtectedAccess
 import org.rsmod.api.player.vars.intVarp
 import org.rsmod.api.realm.Realm
+import org.rsmod.api.repo.obj.ObjRepository
 import org.rsmod.game.entity.Player
 import org.rsmod.game.entity.PlayerList
+import org.rsmod.game.inv.InvObj
+import org.rsmod.game.inv.Inventory
+import org.rsmod.game.type.obj.ObjTypeList
 import org.rsmod.game.type.stat.StatTypeList
+import org.rsmod.map.CoordGrid
 
 @Singleton
 public class PlayerDeath
@@ -26,6 +32,8 @@ constructor(
     private val realm: Realm,
     private val players: PlayerList,
     private val pvpKills: PvpKillTracker,
+    private val objRepo: ObjRepository,
+    private val objTypes: ObjTypeList,
 ) {
     private var Player.specialAttackType by intVarp(varps.sa_attack)
     private var Player.pkPoints by intVarp(varps.mike_pk_points)
@@ -42,9 +50,8 @@ constructor(
         // Respawn op de realm-respawnCoord (bv. Edgeville op de PvP-wereld) i.p.v. hardcoded.
         val respawn = realm.config.respawnCoord
         val randomRespawn = mapFindSquareLineOfWalk(respawn, minRadius = 0, maxRadius = 2)
-        if (pvpWorld) {
-            awardPvpKill()
-        }
+        val deathCoords = player.coords
+        val killer = if (pvpWorld) awardPvpKill() else null
         stopAction()
         delay(2)
         anim(seqs.human_death)
@@ -54,9 +61,11 @@ constructor(
         midiSong(midis.stop_music)
         midiJingle(jingles.death_jingle_2)
         mes("Oh dear, you are dead!")
+        if (killer != null) {
+            dropPvpItems(killer, deathCoords)
+        }
         telejump(randomRespawn ?: respawn)
         resetAnim()
-        // TODO: Drop death invs, etc.
         resetPlayerState(statTypes)
         restoreToplevelTabs(
             components.toplevel_target_pvp_icons,
@@ -76,11 +85,11 @@ constructor(
     }
 
     /** Kent PK-punten toe aan de killer en beeindigt de streak van het slachtoffer. */
-    private fun ProtectedAccess.awardPvpKill() {
+    private fun ProtectedAccess.awardPvpKill(): Player? {
         val victim = player
-        val killer = findHero() ?: return
+        val killer = findHero() ?: return null
         if (killer === victim) {
-            return
+            return null
         }
         val victimStreakLost = pvpKills.endStreak(victim.displayName)
         val result = pvpKills.recordKill(killer.displayName, killer.pkKills, killer.pkPoints)
@@ -103,6 +112,87 @@ constructor(
                 )
             }
         }
+        return killer
+    }
+
+    private fun ProtectedAccess.dropPvpItems(killer: Player, deathCoords: CoordGrid) {
+        val items = deathItems()
+        if (items.isEmpty()) {
+            return
+        }
+        val kept =
+            items
+                .sortedWith(
+                    compareByDescending<DeathItem> { deathValue(it.obj) }
+                        .thenBy { if (it.worn) 0 else 1 }
+                        .thenBy { it.slot }
+                )
+                .take(3)
+                .toSet()
+        val dropped = items.filter { it !in kept }
+
+        clearDeathItems(items)
+        restoreKeptItems(kept, deathCoords)
+
+        val duration = killer.lootDropDuration ?: constants.lootdrop_duration
+        for (entry in dropped) {
+            objRepo.add(entry.obj, deathCoords, duration, killer)
+        }
+        mes(
+            "You kept ${kept.size} item(s). " +
+                "${dropped.size} item stack(s) dropped for ${killer.displayName}."
+        )
+        if (dropped.isNotEmpty()) {
+            killer.mes("${player.displayName} dropped ${dropped.size} item stack(s).")
+        }
+    }
+
+    private fun ProtectedAccess.deathItems(): List<DeathItem> = buildList {
+        collectDeathItems(player.worn, worn = true)
+        collectDeathItems(player.inv, worn = false)
+    }
+
+    private fun MutableList<DeathItem>.collectDeathItems(inventory: Inventory, worn: Boolean) {
+        for (slot in inventory.indices) {
+            val obj = inventory[slot] ?: continue
+            add(DeathItem(inventory, slot, obj, worn))
+        }
+    }
+
+    private fun clearDeathItems(items: List<DeathItem>) {
+        for (entry in items) {
+            entry.inventory[entry.slot] = null
+        }
+    }
+
+    private fun ProtectedAccess.restoreKeptItems(
+        items: Collection<DeathItem>,
+        fallbackCoords: CoordGrid,
+    ) {
+        val duration = constants.lootdrop_duration
+        val sortedItems = items.sortedWith(compareBy<DeathItem> { if (it.worn) 0 else 1 }.thenBy { it.slot })
+        for (entry in sortedItems) {
+            if (entry.worn && player.worn[entry.slot] == null) {
+                player.worn[entry.slot] = entry.obj
+                continue
+            }
+            val invSlot = firstFreeSlot(player.inv)
+            if (invSlot != null) {
+                player.inv[invSlot] = entry.obj
+            } else {
+                objRepo.add(entry.obj, fallbackCoords, duration, player)
+            }
+        }
+    }
+
+    private fun firstFreeSlot(inventory: Inventory): Int? {
+        return inventory.indices.firstOrNull { inventory[it] == null }
+    }
+
+    private fun deathValue(obj: InvObj): Long {
+        val type = objTypes[obj]
+        val each = maxOf(type.playerCost, type.playerCostDerived, type.cost, 0)
+        return each.toLong() * obj.count.toLong().coerceAtLeast(1L)
     }
 
     private fun ProtectedAccess.resetPlayerState(stats: StatTypeList) {
@@ -118,4 +208,11 @@ constructor(
         statRestoreAll(stats.values)
         minimapReset()
     }
+
+    private data class DeathItem(
+        val inventory: Inventory,
+        val slot: Int,
+        val obj: InvObj,
+        val worn: Boolean,
+    )
 }

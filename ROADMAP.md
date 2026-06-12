@@ -165,10 +165,12 @@ Multi-world, login-robuustheid, RSProx-targets, **watchdog (start-worlds.ps1) + 
 - ✅ **Dragon dagger special attack**: refs + anim/spotanim + registratie voor normale, p, p+ en p++
   dagger-varianten; `DragonDaggerSpecialAttack.kt` doet 2x stab-hit met 1.15 accuracy/max-hit en
   gebruikt de standaard 25% special-energy route.
-- ◐ **Wilderness-regels**: skull-on-attack + skull-prevention + wildy-level-ranges gebouwd voor
+- ✅ **Wilderness-regels v1**: skull-on-attack + skull-prevention + wildy-level-ranges gebouwd voor
   W2. W2 blijft buiten wilderness bruikbaar als open PvP-testwereld; binnen wilderness moeten beide
-  spelers in wildy staan en binnen `min(wildy-levels)` combat difference vallen. Open:
-  item-on-death/keep-3, omdat `PlayerDeath.kt` death-inv-drops nog TODO heeft.
+  spelers in wildy staan en binnen `min(wildy-levels)` combat difference vallen. Bij een geldige
+  player-kill houdt het slachtoffer de top 3 waardevolle item-stacks; overige inventory+worn items
+  droppen owner-locked voor de killer. Open voor later: protect-item/prayer-modifier en speciale
+  untradeable-regels.
 
 ### FASE 3 — Minigames & endgame ◐
 - ✅ Arena (waves, best-wave persistent varp 9007, `::arenatop`-hiscores) · **Fight Caves** op de
