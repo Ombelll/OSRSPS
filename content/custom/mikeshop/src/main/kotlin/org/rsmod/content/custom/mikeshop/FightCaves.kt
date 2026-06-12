@@ -13,6 +13,8 @@ import org.rsmod.api.player.protect.ProtectedAccess
 import org.rsmod.api.player.protect.ProtectedAccessLauncher
 import org.rsmod.api.repo.npc.NpcRepository
 import org.rsmod.api.repo.obj.ObjRepository
+import org.rsmod.api.repo.region.RegionRepository
+import org.rsmod.api.repo.region.RegionTemplate
 import org.rsmod.api.script.onArea
 import org.rsmod.api.script.onAreaExit
 import org.rsmod.api.script.onCommand
@@ -24,6 +26,7 @@ import org.rsmod.game.entity.Npc
 import org.rsmod.game.entity.Player
 import org.rsmod.game.entity.PlayerList
 import org.rsmod.game.entity.npc.NpcMode
+import org.rsmod.game.region.Region
 import org.rsmod.game.type.npc.NpcType
 import org.rsmod.game.type.npc.NpcTypeList
 import org.rsmod.map.CoordGrid
@@ -88,12 +91,13 @@ internal object FightCaveNpcEditor : NpcEditor() {
 }
 
 internal object FightCaveState {
-    class Run(var wave: Int = 0) {
+    class Run(val region: Region, val leader: Player, var wave: Int = 0) {
         val members = LinkedHashSet<Player>()
         val npcs = LinkedHashSet<Npc>()
     }
 
-    var run: Run? = null
+    val runs = HashMap<Player, Run>()
+    val npcRuns = HashMap<Npc, Run>()
 }
 
 class FightCaves
@@ -103,6 +107,7 @@ constructor(
     private val npcRepo: NpcRepository,
     private val npcTypes: NpcTypeList,
     private val objRepo: ObjRepository,
+    private val regionRepo: RegionRepository,
     private val players: PlayerList,
     private val death: NpcDeath,
 ) : PluginScript() {
@@ -128,15 +133,27 @@ constructor(
         onCommand("fightcaves") {
             desc = "Enter the Fight Caves gauntlet"
             cheat {
-                val run = FightCaveState.run
-                if (run != null && player in run.members) {
+                if (FightCaveState.runs.containsKey(player)) {
                     player.mes("You're already in the Fight Caves.")
                     return@cheat
                 }
-                if (run != null) {
-                    player.mes("A Fight Caves party is active. Pay the fee to join it.")
+                protectedAccess.launch(player) { startPaidCaves() }
+            }
+        }
+
+        onCommand("fightjoin") {
+            desc = "Join an active Fight Caves party"
+            cheat {
+                if (FightCaveState.runs.containsKey(player)) {
+                    player.mes("You're already in the Fight Caves.")
+                    return@cheat
                 }
-                protectedAccess.launch(player) { enterPaidCaves() }
+                val run = findJoinRun(args.joinToString(" "))
+                if (run == null) {
+                    player.mes("No Fight Caves party found. Use ::fightjoin name if multiple parties are active.")
+                    return@cheat
+                }
+                protectedAccess.launch(player) { joinPaidCaves(run) }
             }
         }
 
@@ -154,23 +171,14 @@ constructor(
     }
 
     private suspend fun ProtectedAccess.enterArena() {
-        val run = FightCaveState.run
-        if (run != null) {
-            if (player in run.members) {
-                return
-            }
-            run.members += player
-            run.message("${player.displayName} joined the Fight Caves party. Next wave will scale up.")
-            return
+        val run = FightCaveState.runs[player] ?: return
+        if (run.wave == 0 && run.members.size == 1) {
+            mes("The heat of the Fight Caves surrounds you. Type ::fightquit to leave.")
+            spawnWave(run, 1)
         }
-        val newRun = FightCaveState.Run()
-        newRun.members += player
-        FightCaveState.run = newRun
-        mes("The heat of the Fight Caves surrounds you. Type ::fightquit to leave.")
-        spawnWave(1)
     }
 
-    private suspend fun ProtectedAccess.enterPaidCaves() {
+    private suspend fun ProtectedAccess.startPaidCaves() {
         if (invCoinTotal() < entranceFee) {
             mes("The Fight Caves entrance fee is $entranceFee coins.")
             return
@@ -180,36 +188,56 @@ constructor(
             return
         }
         mes("You pay $entranceFee coins to enter the Fight Caves.")
-        telejump(start)
+        val region = createRegion()
+        if (region == null) {
+            invAdd(player.inv, objs.coins, entranceFee, strict = false)
+            mes("Could not create a Fight Caves instance. Your fee has been refunded.")
+            return
+        }
+        val run = FightCaveState.Run(region, player)
+        addMember(run, player)
+        telejump(runStart(run))
+    }
+
+    private suspend fun ProtectedAccess.joinPaidCaves(run: FightCaveState.Run) {
+        if (invCoinTotal() < entranceFee) {
+            mes("The Fight Caves entrance fee is $entranceFee coins.")
+            return
+        }
+        if (!invTakeFee(entranceFee)) {
+            mes("The Fight Caves entrance fee is $entranceFee coins.")
+            return
+        }
+        mes("You pay $entranceFee coins to join ${run.leader.displayName}'s Fight Caves party.")
+        addMember(run, player)
+        run.message("${player.displayName} joined the Fight Caves party. Next wave will scale up.")
+        telejump(runStart(run))
     }
 
     private suspend fun ProtectedAccess.exitArena() {
-        val run = FightCaveState.run ?: return
-        if (player !in run.members) {
-            return
-        }
+        val run = FightCaveState.runs[player] ?: return
         run.members.remove(player)
+        FightCaveState.runs.remove(player)
         mes("Your Fight Caves run has ended.")
         if (run.members.isEmpty()) {
             cleanupRun(run)
-            FightCaveState.run = null
         } else {
             run.message("${player.displayName} left the Fight Caves party.")
         }
     }
 
-    private fun spawnWave(wave: Int) {
-        val run = FightCaveState.run ?: return
+    private fun spawnWave(run: FightCaveState.Run, wave: Int) {
         run.wave = wave
         val waveTypes = scaledWaveTypes(wave, run.members.size.coerceAtLeast(1))
         var spawned = 0
         for ((index, type) in waveTypes.withIndex()) {
             val off = spawnOffsets[index % spawnOffsets.size]
             try {
-                val npc = Npc(npcTypes[type], start.translate(off.first, off.second))
+                val npc = Npc(npcTypes[type], runStart(run).translate(off.first, off.second))
                 npc.mode = NpcMode.None
                 npcRepo.add(npc, duration = 2000)
                 run.npcs += npc
+                FightCaveState.npcRuns[npc] = run
                 spawned++
             } catch (e: Exception) {
                 // Blocked spawn tile: skip it; the wave can still continue with the rest.
@@ -218,7 +246,6 @@ constructor(
         if (spawned == 0) {
             run.message("The cave refuses to spawn this wave. Your run has been reset.")
             cleanupRun(run)
-            FightCaveState.run = null
             return
         }
         run.message("Fight Caves wave $wave/$maxWave: $spawned enemies for ${run.members.size} player(s)!")
@@ -245,7 +272,7 @@ constructor(
         }
 
     private suspend fun StandardNpcAccess.fightCaveKill() {
-        val run = FightCaveState.run
+        val run = FightCaveState.npcRuns.remove(npc)
         if (run == null || !run.npcs.remove(npc)) {
             death.deathWithDrops(this)
             return
@@ -272,15 +299,19 @@ constructor(
                 }
             }
             cleanupRun(run)
-            FightCaveState.run = null
             return
         }
         run.message("Wave $cleared cleared. Prepare yourself...")
-        spawnWave(cleared + 1)
+        spawnWave(run, cleared + 1)
     }
 
     private fun cleanupRun(run: FightCaveState.Run) {
+        for (member in run.members.toList()) {
+            FightCaveState.runs.remove(member)
+        }
+        run.members.clear()
         for (npc in run.npcs.toList()) {
+            FightCaveState.npcRuns.remove(npc)
             try {
                 npcRepo.del(npc, Int.MAX_VALUE)
             } catch (e: Exception) {
@@ -290,9 +321,43 @@ constructor(
         run.npcs.clear()
     }
 
+    private fun addMember(run: FightCaveState.Run, player: Player) {
+        run.members += player
+        FightCaveState.runs[player] = run
+    }
+
+    private fun findJoinRun(name: String): FightCaveState.Run? {
+        val runs = FightCaveState.runs.values.toSet()
+        if (runs.isEmpty()) {
+            return null
+        }
+        if (name.isBlank()) {
+            return runs.singleOrNull()
+        }
+        return runs.firstOrNull { run ->
+            run.members.any { it.displayName.equals(name, ignoreCase = true) }
+        }
+    }
+
+    private fun createRegion(): Region? = regionRepo.add(fightCaveTemplate)
+
+    private fun runStart(run: FightCaveState.Run): CoordGrid {
+        return run.region.normal[0, 37, 79, 45, 61]
+    }
+
     private fun FightCaveState.Run.message(text: String) {
         for (member in members) {
             member.mes(text)
         }
+    }
+
+    private companion object {
+        val fightCaveTemplate =
+            RegionTemplate.create {
+                copyAllLevels(296, 632) {
+                    zoneWidth = 8
+                    zoneLength = 8
+                }
+            }
     }
 }

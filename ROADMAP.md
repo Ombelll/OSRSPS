@@ -90,7 +90,8 @@ JOIN characters c ON c.id=s.character_id JOIN accounts a ON a.id=c.account_id OR
 Hub/reis: `::hub ::teleport` + Teleport Wizard-NPC · Gear/test: `::maxgear ::maxxp ::setname
 ::skillkit ::skillmats ::skillzone` · Winkels: `::pkshop ::pkmelee/ranged/magic/supplies
 ::potionshop ::store ::mikeshop ::supplyshop ::npcge` · PvM: `::mikeboss …::godboss ::bosses
-::bossslayer` · Minigames: `::arena ::arenaquit ::arenatop ::fightcaves ::fightquit ::dice
+::bossslayer` · Minigames: `::arena ::arenajoin ::arenaquit ::arenatop ::fightcaves ::fightjoin
+::fightquit ::dice
 ::flip ::slots ::mystery` · Progressie: `::questlog ::quests ::diary ::achievements
 ::collection ::pkpoints ::pkspend ::daily ::event`.
 
@@ -178,9 +179,10 @@ Multi-world, login-robuustheid, RSProx-targets, **watchdog (start-worlds.ps1) + 
   wave-scaling en per-speler owner-locked coin drops/records. Fight Caves laat spelers betaald
   bij dezelfde run joinen, schaalt waves op deelnemersaantal en deelt coins/fire cape per deelnemer.
   Open voor later: echte per-party instances zodat meerdere groepen tegelijk Fight Caves kunnen doen.
-- ☐ Instancing-upgrade Fight Caves (engine kan het al): `RegionTemplate.create {
-  copyAllLevels(296, 632) { zoneWidth = 8; zoneLength = 8 } }` → `regionRepo.add` →
-  `telejump(region.normal[0,37,79,45,61])`; voorbeeld `content/travel/canoe/.../CanoeTravelling.kt:193+`.
+- ✅ **Instancing-upgrade Fight Caves v1**: `::fightcaves` maakt per party een eigen
+  `RegionTemplate`/`RegionRepository` instance van de TzHaar-map; `::fightjoin [naam]` laat extra
+  spelers betaald in dezelfde instance joinen. NPC-spawns en drops worden per `Run`/`npcRuns`
+  gevolgd, waardoor meerdere Fight Caves groepen tegelijk kunnen draaien.
 
 ### FASE 4 — Quests & UI ✅ (basis)
 Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met boss-kill-stages
@@ -225,9 +227,8 @@ Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met bo
 1. **Live verificatie nieuwe batch** (Fase 6) — alles is gebouwd maar ongetest in-game; vind de
    bugs vóór er verder gestapeld wordt. Checklist staat hierboven.
 2. **2-client-test** (Fase 6) — ontgrendelt trade Plan A en multi-speler-waves.
-3. **Instancing-upgrade Fight Caves** (Fase 3) — na multi-speler-waves v1 de volgende schaalstap.
-4. **Trade Plan A** (Fase 5) — medium; client-onbekenden eerst met 2 clients verifiëren.
-5. **Wilderness item-on-death/keep-3** — eerst death-inv-drop API afronden.
+3. **Trade Plan A** (Fase 5) — medium; client-onbekenden eerst met 2 clients verifiëren.
+4. **Wilderness item-on-death/keep-3** — eerst death-inv-drop API afronden.
 
 ## E. CHECKLIST VOOR ELKE WIJZIGING (dwingend)
 1. Item/npc/loc-namen exact gevalideerd in de .sym (B12)?
