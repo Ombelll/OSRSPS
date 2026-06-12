@@ -174,8 +174,10 @@ Multi-world, login-robuustheid, RSProx-targets, **watchdog (start-worlds.ps1) + 
   echte map (area 32763 + `mike_boss_aggro`; `::fightcaves`/`::fightquit`) · custom **collection
   log** (`::collection`) · **daily events** (`::daily`/`::event`) · dice/flip/slots/mystery ·
   progressie/diary/achievements
-- ☐ **Multi-speler-waves** (arena & fight caves zijn nu 1 speler): occupant-lijst i.p.v. één
-  Run; waves schalen met spelersaantal; loot verdelen via per-speler `objRepo.add(..., hero)`.
+- ✅ **Multi-speler-waves v1**: Arena gebruikt party-runs met `::arenajoin`, deelnemerslijst,
+  wave-scaling en per-speler owner-locked coin drops/records. Fight Caves laat spelers betaald
+  bij dezelfde run joinen, schaalt waves op deelnemersaantal en deelt coins/fire cape per deelnemer.
+  Open voor later: echte per-party instances zodat meerdere groepen tegelijk Fight Caves kunnen doen.
 - ☐ Instancing-upgrade Fight Caves (engine kan het al): `RegionTemplate.create {
   copyAllLevels(296, 632) { zoneWidth = 8; zoneLength = 8 } }` → `regionRepo.add` →
   `telejump(region.normal[0,37,79,45,61])`; voorbeeld `content/travel/canoe/.../CanoeTravelling.kt:193+`.
@@ -223,7 +225,7 @@ Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met bo
 1. **Live verificatie nieuwe batch** (Fase 6) — alles is gebouwd maar ongetest in-game; vind de
    bugs vóór er verder gestapeld wordt. Checklist staat hierboven.
 2. **2-client-test** (Fase 6) — ontgrendelt trade Plan A en multi-speler-waves.
-3. **Multi-speler-waves** (Fase 3) — bouwt op de 2-client-test.
+3. **Instancing-upgrade Fight Caves** (Fase 3) — na multi-speler-waves v1 de volgende schaalstap.
 4. **Trade Plan A** (Fase 5) — medium; client-onbekenden eerst met 2 clients verifiëren.
 5. **Wilderness item-on-death/keep-3** — eerst death-inv-drop API afronden.
 

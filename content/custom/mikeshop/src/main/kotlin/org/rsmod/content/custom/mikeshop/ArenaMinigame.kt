@@ -30,11 +30,15 @@ internal object ArenaMonsters : NpcReferences() {
     val lesser_demon = find("lesser_demon")
 }
 
-/** In-memory state per speler die in de arena zit. */
+/** In-memory state voor party-runs in de arena. */
 internal object ArenaState {
-    class Run(var wave: Int, var alive: Int)
+    class Run(var leader: Player, var wave: Int = 0, var alive: Int = 0) {
+        val members = LinkedHashSet<Player>()
+        val npcs = LinkedHashSet<Npc>()
+    }
 
     val runs = HashMap<Player, Run>()
+    val npcRuns = HashMap<Npc, Run>()
 }
 
 private var Player.arenaBestWave: Int by intVarp(varps.mike_arena_best_wave)
@@ -77,11 +81,32 @@ constructor(
                     player.mes("You're already fighting in the arena!")
                     return@cheat
                 }
-                ArenaState.runs[player] = ArenaState.Run(wave = 0, alive = 0)
+                val run = ArenaState.Run(player)
+                run.members += player
+                ArenaState.runs[player] = run
                 player.mes("=== COMBAT ARENA ===")
                 player.mes("Your best wave: ${player.arenaBestWave}/$maxWave.")
-                player.mes("Survive 10 waves! Stand in OPEN ground. Type ::arenaquit to leave.")
-                spawnWave(player, 1)
+                player.mes("Survive 10 waves! Friends nearby can type ::arenajoin.")
+                player.mes("Stand in OPEN ground. Type ::arenaquit to leave.")
+                spawnWave(run, 1)
+            }
+        }
+
+        onCommand("arenajoin") {
+            desc = "Join a nearby Combat Arena party run"
+            cheat {
+                if (ArenaState.runs.containsKey(player)) {
+                    player.mes("You're already in an arena party.")
+                    return@cheat
+                }
+                val run = nearbyJoinableRun(player)
+                if (run == null) {
+                    player.mes("No nearby arena party found. Stand near the leader and try again.")
+                    return@cheat
+                }
+                run.members += player
+                ArenaState.runs[player] = run
+                run.message("${player.displayName} joined the arena party. Next wave will scale up.")
             }
         }
 
@@ -93,8 +118,9 @@ constructor(
         onCommand("arenaquit") {
             desc = "Leave the arena"
             cheat {
-                if (ArenaState.runs.remove(player) != null) {
-                    player.mes("You leave the arena. (Remaining monsters despawn shortly.)")
+                val run = ArenaState.runs[player]
+                if (run != null) {
+                    leaveRun(player, run)
                 } else {
                     player.mes("You're not in the arena.")
                 }
@@ -114,17 +140,19 @@ constructor(
             else -> ArenaMonsters.lesser_demon
         }
 
-    private fun spawnWave(player: Player, wave: Int) {
-        val run = ArenaState.runs[player] ?: return
+    private fun spawnWave(run: ArenaState.Run, wave: Int) {
         run.wave = wave
-        val count = (2 + wave).coerceAtMost(spawnOffsets.size)
+        val memberCount = run.members.size.coerceAtLeast(1)
+        val count = (2 + wave + (memberCount - 1) * 2).coerceAtMost(spawnOffsets.size)
         val type = waveMonster(wave)
         var spawned = 0
         for (off in spawnOffsets.take(count)) {
             try {
-                val npc = Npc(npcTypes[type], player.coords.translate(off.first, off.second))
+                val npc = Npc(npcTypes[type], run.leader.coords.translate(off.first, off.second))
                 npc.mode = NpcMode.None
                 npcRepo.add(npc, duration = 2000)
+                run.npcs += npc
+                ArenaState.npcRuns[npc] = run
                 spawned++
             } catch (e: Exception) {
                 // tegel geblokkeerd -> sla over
@@ -132,43 +160,94 @@ constructor(
         }
         run.alive = spawned
         if (spawned == 0) {
-            player.mes("No room to spawn monsters - move to open ground and ::arena again.")
-            ArenaState.runs.remove(player)
+            run.message("No room to spawn monsters - move to open ground and ::arena again.")
+            cleanupRun(run)
             return
         }
-        player.mes("Wave $wave/$maxWave: $spawned enemies incoming - kill them all!")
+        run.message("Wave $wave/$maxWave: $spawned enemies incoming for ${run.members.size} player(s)!")
+    }
+
+    private fun nearbyJoinableRun(player: Player): ArenaState.Run? {
+        val runs = ArenaState.runs.values.toSet()
+        return runs.firstOrNull { run ->
+            run.members.any { member -> member.distanceTo(player) <= 8 }
+        }
+    }
+
+    private fun leaveRun(player: Player, run: ArenaState.Run) {
+        ArenaState.runs.remove(player)
+        run.members.remove(player)
+        player.mes("You leave the arena party.")
+        if (run.members.isEmpty()) {
+            cleanupRun(run)
+        } else {
+            if (run.leader === player) {
+                run.leader = run.members.first()
+            }
+            run.message("${player.displayName} left the arena party.")
+        }
+    }
+
+    private fun cleanupRun(run: ArenaState.Run) {
+        for (member in run.members.toList()) {
+            ArenaState.runs.remove(member)
+        }
+        run.members.clear()
+        for (npc in run.npcs.toList()) {
+            ArenaState.npcRuns.remove(npc)
+            try {
+                npcRepo.del(npc, Int.MAX_VALUE)
+            } catch (e: Exception) {
+                // Already gone through death cleanup.
+            }
+        }
+        run.npcs.clear()
+        run.alive = 0
+    }
+
+    private fun ArenaState.Run.message(text: String) {
+        for (member in members) {
+            member.mes(text)
+        }
     }
 
     private suspend fun StandardNpcAccess.arenaKill() {
         val coords = npc.coords
         val hero = findHero(players)
-        val run = hero?.let { ArenaState.runs[it] }
-        if (hero == null || run == null) {
+        val run = ArenaState.npcRuns.remove(npc) ?: hero?.let { ArenaState.runs[it] }
+        if (run == null) {
             // Geen arena-kill (bv. dit monster ergens anders gedood) -> normale loot.
             death.deathWithDrops(this)
             return
         }
+        run.npcs.remove(npc)
         // Arena-kill: geen normale loot, wel een kleine coin-beloning per kill.
         death.deathNoDrops(this)
-        objRepo.add(objs.coins, coords, 100, hero, count = run.wave * 500)
+        for (member in run.members) {
+            objRepo.add(objs.coins, coords, 100, member, count = run.wave * 500)
+        }
         run.alive--
         if (run.alive > 0) {
             return
         }
         // Golf geklaard:
         val cleared = run.wave
-        objRepo.add(objs.coins, coords, 200, hero, count = cleared * 5000)
-        hero.mes("Wave $cleared cleared! +${cleared * 5000} coins.")
-        if (cleared > hero.arenaBestWave) {
-            hero.arenaBestWave = cleared
-            hero.mes("New Combat Arena record: wave $cleared/$maxWave!")
+        for (member in run.members) {
+            objRepo.add(objs.coins, coords, 200, member, count = cleared * 5000)
+            member.mes("Wave $cleared cleared! +${cleared * 5000} coins.")
+            if (cleared > member.arenaBestWave) {
+                member.arenaBestWave = cleared
+                member.mes("New Combat Arena record: wave $cleared/$maxWave!")
+            }
         }
         if (cleared >= maxWave) {
-            objRepo.add(objs.coins, coords, 300, hero, count = 1_000_000)
-            hero.mes("=== ARENA CHAMPION! All $maxWave waves cleared! Bonus 1,000,000 coins! ===")
-            ArenaState.runs.remove(hero)
+            for (member in run.members) {
+                objRepo.add(objs.coins, coords, 300, member, count = 1_000_000)
+                member.mes("=== ARENA CHAMPION! All $maxWave waves cleared! Bonus 1,000,000 coins! ===")
+            }
+            cleanupRun(run)
         } else {
-            spawnWave(hero, cleared + 1)
+            spawnWave(run, cleared + 1)
         }
     }
 }
