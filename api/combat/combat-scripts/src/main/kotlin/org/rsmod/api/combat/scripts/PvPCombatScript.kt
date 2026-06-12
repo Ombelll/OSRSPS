@@ -1,6 +1,8 @@
 package org.rsmod.api.combat.scripts
 
 import jakarta.inject.Inject
+import kotlin.math.abs
+import kotlin.math.min
 import org.rsmod.api.combat.PvPCombat
 import org.rsmod.api.combat.commons.magic.MagicSpell
 import org.rsmod.api.combat.commons.styles.AttackStyle
@@ -14,9 +16,11 @@ import org.rsmod.api.combat.weapon.styles.AttackStyles
 import org.rsmod.api.combat.weapon.types.AttackTypes
 import org.rsmod.api.config.refs.categories
 import org.rsmod.api.config.refs.queues
+import org.rsmod.api.config.refs.varbits
 import org.rsmod.api.player.isInPvpCombat
 import org.rsmod.api.player.protect.ProtectedAccess
 import org.rsmod.api.player.righthand
+import org.rsmod.api.player.vars.boolVarBit
 import org.rsmod.api.script.advanced.onApPlayer2
 import org.rsmod.api.script.advanced.onOpPlayer2
 import org.rsmod.api.script.onApPlayerT
@@ -40,6 +44,7 @@ constructor(
 ) : PluginScript() {
     // PvP staat alleen aan op de PvP-wereld (env RSMOD_WORLD=2); andere werelden zijn veilig.
     private val pvpWorld = System.getenv("RSMOD_WORLD") == "2"
+    private var Player.skullPrevention by boolVarBit(varbits.skull_prevent)
 
     override fun ScriptContext.startup() {
         onApPlayer2 { attemptCombatAp(it.target) }
@@ -112,6 +117,15 @@ constructor(
             clearPendingAction()
             return false
         }
+        if (!isWithinWildernessRange(target)) {
+            clearPendingAction()
+            return false
+        }
+        if (wouldSkullOn(target) && player.skullPrevention) {
+            mes("Your skull prevention stops you from attacking ${target.displayName}.")
+            clearPendingAction()
+            return false
+        }
         val weapon = objTypes.getOrNull(player.righthand)
         if (weapon != null && weapon.isCategoryType(categories.dinhs_bulwark)) {
             val attackStyle = styles.get(player)
@@ -156,5 +170,41 @@ constructor(
             }
         }
         return true
+    }
+
+    private fun ProtectedAccess.wouldSkullOn(target: Player): Boolean =
+        player.skullIcon == null && pkPredator1 != target.uid
+
+    private fun ProtectedAccess.isWithinWildernessRange(target: Player): Boolean {
+        val sourceLevel = player.wildernessLevel()
+        val targetLevel = target.wildernessLevel()
+        if (sourceLevel == null && targetLevel == null) {
+            return true
+        }
+        if (sourceLevel == null || targetLevel == null) {
+            mes("You can only attack players who are also in the Wilderness.")
+            return false
+        }
+
+        val allowedDifference = min(sourceLevel, targetLevel)
+        val combatDifference = abs(player.combatLevel - target.combatLevel)
+        if (combatDifference <= allowedDifference) {
+            return true
+        }
+
+        mes(
+            "You need to move deeper into the Wilderness to attack ${target.displayName}. " +
+                "Your level range is $allowedDifference."
+        )
+        return false
+    }
+
+    private fun Player.wildernessLevel(): Int? {
+        val x = coords.x
+        val z = coords.z
+        if (x !in 2944..3391 || z !in 3520..4351) {
+            return null
+        }
+        return (((z - 3520) / 8) + 1).coerceIn(1, 56)
     }
 }

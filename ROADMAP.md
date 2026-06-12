@@ -163,8 +163,10 @@ Multi-world, login-robuustheid, RSProx-targets, **watchdog (start-worlds.ps1) + 
 - ✅ **Dragon dagger special attack**: refs + anim/spotanim + registratie voor normale, p, p+ en p++
   dagger-varianten; `DragonDaggerSpecialAttack.kt` doet 2x stab-hit met 1.15 accuracy/max-hit en
   gebruikt de standaard 25% special-energy route.
-- ☐ **Wilderness-regels** (skull, item-on-death keep-3, wildy-level-ranges) — groter blok;
-  begin met onderzoek naar `appearance.skull`/gravestone-API's; nog niet onderzocht.
+- ◐ **Wilderness-regels**: skull-on-attack + skull-prevention + wildy-level-ranges gebouwd voor
+  W2. W2 blijft buiten wilderness bruikbaar als open PvP-testwereld; binnen wilderness moeten beide
+  spelers in wildy staan en binnen `min(wildy-levels)` combat difference vallen. Open:
+  item-on-death/keep-3, omdat `PlayerDeath.kt` death-inv-drops nog TODO heeft.
 
 ### FASE 3 — Minigames & endgame ◐
 - ✅ Arena (waves, best-wave persistent varp 9007, `::arenatop`-hiscores) · **Fight Caves** op de
@@ -222,7 +224,7 @@ Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met bo
 2. **2-client-test** (Fase 6) — ontgrendelt trade Plan A en multi-speler-waves.
 3. **Multi-speler-waves** (Fase 3) — bouwt op de 2-client-test.
 4. **Trade Plan A** (Fase 5) — medium; client-onbekenden eerst met 2 clients verifiëren.
-5. **Wilderness-regels** — parallel oppakbaar na/naast de client-verificatie.
+5. **Wilderness item-on-death/keep-3** — eerst death-inv-drop API afronden.
 
 ## E. CHECKLIST VOOR ELKE WIJZIGING (dwingend)
 1. Item/npc/loc-namen exact gevalideerd in de .sym (B12)?
