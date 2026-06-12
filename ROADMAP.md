@@ -202,8 +202,9 @@ Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met bo
   atomaire swap via `invTransaction` + `select(beide offers/invs)` + 2× `moveAll` (niets commit
   bij falen). UI-template: `content/interfaces/equipment/.../GuidePriceScript.kt`. Client-
   onbekenden: trademain-cs2-init + partner-offer spiegelen (`UpdateInvFull(-(combined), 32858, ...)`).
-  Anti-switch-scam: accept-flags resetten bij élke offer-mutatie. `tradeoffer` is Perm →
-  login-restore toevoegen.
+  Anti-switch-scam: accept-flags resetten bij élke offer-mutatie. ✅ Veiligheidsbasis:
+  `LoginScript.kt` zet achtergebleven `tradeoffer`-items bij login terug in de backpack, of dropt ze
+  owner-locked onder de speler als de backpack vol is.
 
 ### FASE 6 — Multiplayer, verificatie & sociaal ☐ ← **HIER STAAN WE**
 - ☐ **Live verificatie van de nieuwe batch** (gebouwd + gecommit + servers draaien, maar nog
@@ -230,7 +231,6 @@ Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met bo
    bugs vóór er verder gestapeld wordt. Checklist staat hierboven.
 2. **2-client-test** (Fase 6) — ontgrendelt trade Plan A en multi-speler-waves.
 3. **Trade Plan A** (Fase 5) — medium; client-onbekenden eerst met 2 clients verifiëren.
-4. **Wilderness item-on-death/keep-3** — eerst death-inv-drop API afronden.
 
 ## E. CHECKLIST VOOR ELKE WIJZIGING (dwingend)
 1. Item/npc/loc-namen exact gevalideerd in de .sym (B12)?

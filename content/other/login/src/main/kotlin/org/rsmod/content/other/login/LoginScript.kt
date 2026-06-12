@@ -8,8 +8,12 @@ import net.rsprot.protocol.game.outgoing.misc.client.MinimapToggle
 import net.rsprot.protocol.game.outgoing.misc.client.ResetAnims
 import net.rsprot.protocol.game.outgoing.misc.player.ChatFilterSettings
 import net.rsprot.protocol.game.outgoing.varp.VarpReset
+import org.rsmod.api.config.constants
+import org.rsmod.api.config.refs.invs
 import org.rsmod.api.config.refs.varbits
 import org.rsmod.api.inv.weight.InvWeight
+import org.rsmod.api.invtx.invClear
+import org.rsmod.api.invtx.invMoveAll
 import org.rsmod.api.player.output.Camera
 import org.rsmod.api.player.output.ChatType
 import org.rsmod.api.player.output.MiscOutput
@@ -22,6 +26,7 @@ import org.rsmod.api.player.stat.stat
 import org.rsmod.api.player.vars.boolVarBit
 import org.rsmod.api.player.vars.resyncVar
 import org.rsmod.api.realm.Realm
+import org.rsmod.api.repo.obj.ObjRepository
 import org.rsmod.api.script.onEvent
 import org.rsmod.api.stats.levelmod.InvisibleLevels
 import org.rsmod.game.MapClock
@@ -39,6 +44,7 @@ class LoginScript
 constructor(
     private val realm: Realm,
     private val mapClock: MapClock,
+    private val objRepo: ObjRepository,
     private val objTypes: ObjTypeList,
     private val varpTypes: VarpTypeList,
     private val statTypes: StatTypeList,
@@ -109,8 +115,27 @@ constructor(
     }
 
     private fun Player.sendInvs() {
+        restoreDanglingTradeOffer()
         startInvTransmit(inv)
         startInvTransmit(worn)
+    }
+
+    private fun Player.restoreDanglingTradeOffer() {
+        val tradeOffer = invMap[invs.tradeoffer] ?: return
+        if (tradeOffer.isEmpty()) {
+            return
+        }
+        val move = invMoveAll(from = tradeOffer, into = inv)
+        if (move.success) {
+            mes("Items left in your trade offer were returned to your inventory.")
+            return
+        }
+        for (obj in tradeOffer) {
+            obj ?: continue
+            objRepo.add(obj, coords, constants.lootdrop_duration, receiver = this)
+        }
+        invClear(tradeOffer)
+        mes("Items left in your trade offer were dropped under you.")
     }
 
     private fun Player.resetCam() {
