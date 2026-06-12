@@ -160,17 +160,9 @@ Multi-world, login-robuustheid, RSProx-targets, **watchdog (start-worlds.ps1) + 
 ### FASE 2 — Combat-diepte ◐
 - ✅ PvN+PvP · protect prayers (werkten al) · **aggressie live** (`mike_boss_aggro` op de bosses,
   huntRange 8) · **boss-fases** (`BossMechanics.kt`)
-- ☐ **Dragon dagger special attack** (~4 bestanden; framework compleet):
-  1. `api/config/refs/BaseObjs.kt`: refs `dragon_dagger`, `dragon_dagger_p`,
-     `..._p_plus = find("dragon_dagger_p+")`, `..._p_plus_plus = find("dragon_dagger_p++")`.
-  2. `content/other/special-attacks/.../configs/`: SeqRef `find("puncture")`, SpotanimRef
-     `find("sp_attack_puncture_spotanim")`.
-  3. Nieuw `melee/DragonDaggerSpecialAttack.kt` — kopie van `DragonLongswordSpecialAttack.kt`:
-     2× `manager.rollMeleeDamage(this, target, attack, 1.15, 1.15)` → 2× `queueMeleeHit` →
-     `giveCombatXp(d1+d2)` → `manager.continueCombat(...)` → `return true`. Geen eigen attack-delay.
-  4. `SpecialAttackModule.kt`: `addSetBinding<SpecialAttackMap>(DragonDaggerSpecialAttack::class.java)`.
-  Script-only → installDist. Startup-fout "not found in the required enums" = die variant uit de
-  registratie halen. Verificatie: dd + spec-bar → dubbele hitsplat, -25% energie.
+- ✅ **Dragon dagger special attack**: refs + anim/spotanim + registratie voor normale, p, p+ en p++
+  dagger-varianten; `DragonDaggerSpecialAttack.kt` doet 2x stab-hit met 1.15 accuracy/max-hit en
+  gebruikt de standaard 25% special-energy route.
 - ☐ **Wilderness-regels** (skull, item-on-death keep-3, wildy-level-ranges) — groter blok;
   begin met onderzoek naar `appearance.skull`/gravestone-API's; nog niet onderzocht.
 
@@ -228,11 +220,9 @@ Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met bo
 1. **Live verificatie nieuwe batch** (Fase 6) — alles is gebouwd maar ongetest in-game; vind de
    bugs vóór er verder gestapeld wordt. Checklist staat hierboven.
 2. **2-client-test** (Fase 6) — ontgrendelt trade Plan A en multi-speler-waves.
-3. **Dragon dagger spec** (Fase 2) — klein, recept compleet.
-4. **Multi-speler-waves** (Fase 3) — bouwt op de 2-client-test.
-5. **NPC-GE v2 persistentie** (Fase 5) — Flyway-migratie, geen client-werk.
-6. **Trade Plan A** (Fase 5) — medium; client-onbekenden eerst met 2 clients verifiëren.
-7. **Wilderness-regels** — parallel oppakbaar na/naast de client-verificatie.
+3. **Multi-speler-waves** (Fase 3) — bouwt op de 2-client-test.
+4. **Trade Plan A** (Fase 5) — medium; client-onbekenden eerst met 2 clients verifiëren.
+5. **Wilderness-regels** — parallel oppakbaar na/naast de client-verificatie.
 
 ## E. CHECKLIST VOOR ELKE WIJZIGING (dwingend)
 1. Item/npc/loc-namen exact gevalideerd in de .sym (B12)?
