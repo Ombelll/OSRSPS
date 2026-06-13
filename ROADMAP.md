@@ -4,7 +4,7 @@ Doel: **elk open punt is uitvoerbaar zonder eigen onderzoek** — exacte paden, 
 build-stappen en verificatie. Paden relatief aan `C:\Users\Mike\rsmod`. ✅ klaar · ◐ deels · ☐ te doen.
 
 > **Huidige staat (v4, na de grote content-batch):** 2 werelden (W1 GE-hub/PvM 43594, W2
-> PvP/Edgeville 43595, eigen DB's), **172 scripts**. Nieuw sinds v3: NPC-aggressie via custom
+> PvP/Edgeville 43595, eigen DB's), **173 scripts**. Nieuw sinds v3: NPC-aggressie via custom
 > hunt-mode, Fight Caves-gauntlet op de echte map (area-lifecycle), persistente PK-punten
 > (varps), NPC-Grand Exchange (orderboek), quest-log/collection/hiscore-UI's (questjournal-
 > interface), boss-fases, daily events, PK-cosmetics, arena best-wave, **watchdog + backups +
@@ -93,7 +93,7 @@ Hub/reis: `::hub ::teleport` + Teleport Wizard-NPC · Gear/test: `::maxgear ::ma
 ::bossslayer` · Minigames: `::arena ::arenajoin ::arenaquit ::arenatop ::fightcaves ::fightjoin
 ::fightquit ::dice
 ::flip ::slots ::mystery` · Progressie: `::questlog ::quests ::diary ::achievements
-::collection ::pkpoints ::pkspend ::daily ::event`.
+::collection ::pkpoints ::pkspend ::daily ::event` · Trade: `::trade <naam> ::tradecancel`.
 
 ---
 
@@ -204,7 +204,9 @@ Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met bo
   onbekenden: trademain-cs2-init + partner-offer spiegelen (`UpdateInvFull(-(combined), 32858, ...)`).
   Anti-switch-scam: accept-flags resetten bij élke offer-mutatie. ✅ Veiligheidsbasis:
   `LoginScript.kt` zet achtergebleven `tradeoffer`-items bij login terug in de backpack, of dropt ze
-  owner-locked onder de speler als de backpack vol is.
+  owner-locked onder de speler als de backpack vol is. ✅ Request-handshake:
+  `PlayerTrade.kt` registreert `Trade with`/`::trade <naam>`, wederzijdse accept, timeout en
+  `::tradecancel`. Open: echte offer/confirm-schermen + atomaire item-swap.
 
 ### FASE 6 — Multiplayer, verificatie & sociaal ☐ ← **HIER STAAN WE**
 - ☐ **Live verificatie van de nieuwe batch** (gebouwd + gecommit + servers draaien, maar nog
