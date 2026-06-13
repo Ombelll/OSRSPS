@@ -94,7 +94,8 @@ Hub/reis: `::hub ::teleport` + Teleport Wizard-NPC · Gear/test: `::maxgear ::ma
 ::fightquit ::dice
 ::flip ::slots ::mystery` · Progressie: `::questlog ::quests ::diary ::achievements
 ::collection ::pkpoints ::pkspend ::daily ::event` · Trade: `::trade <naam> ::tradeoffer
-::traderemove ::tradestatus ::tradeaccept ::tradecancel`.
+::traderemove ::tradestatus ::tradeaccept ::tradecancel` · Sociaal: `::online ::pm ::reply
+::friendadd ::frienddel ::friends ::clancreate ::clanjoin ::clanmsg ::clanwho ::clanleave`.
 
 ---
 
@@ -224,7 +225,10 @@ Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met bo
 - ✅ **Hiscores-webpagina**: `hiscores-web.ps1` start een lokale read-only pagina op
   `http://127.0.0.1:8088`; leest W1 `game.db` en W2 `game_w2.db`, met world/skill/search/top-filter.
   Data blijft logout-vers.
-- ☐ PM/friends/clanchat — engine-onderzoek nodig (nog niet gedaan).
+- ✅ **Sociaal command-v1**: `SocialCommands.kt` voegt online-list, command-PM/reply,
+  sessie-friends en simpele clan-chat per world toe. Dit gebruikt server-berichten/chattypes en is
+  bedoeld als bruikbare multiplayer-laag terwijl native friend/PM/clan-packets later onderzocht
+  kunnen worden. Open: persistent friends + echte client-side friends/clan interfaces.
 
 ### FASE 7 — Polish & beheer ◐
 - ✅ Watchdog/backups/log-rotatie

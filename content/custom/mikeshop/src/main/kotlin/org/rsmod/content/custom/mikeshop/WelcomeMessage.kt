@@ -28,6 +28,7 @@ class WelcomeMessage @Inject constructor() : PluginScript() {
                 player.mes("Travel: ::teleport, ::home, ::varrock, ::falador, ::ge, ::mine")
                 player.mes("Progress: ::achievements, ::slayerpoints, ::slayershop")
                 player.mes("PvP (W2): ::pkshop, ::pkpoints, ::pkspend - kills geven PK-punten!")
+                player.mes("Social: ::online, ::pm, ::reply, ::friendadd, ::friends, ::clancreate")
             }
         }
     }
