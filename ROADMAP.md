@@ -93,7 +93,8 @@ Hub/reis: `::hub ::teleport` + Teleport Wizard-NPC · Gear/test: `::maxgear ::ma
 ::bossslayer` · Minigames: `::arena ::arenajoin ::arenaquit ::arenatop ::fightcaves ::fightjoin
 ::fightquit ::dice
 ::flip ::slots ::mystery` · Progressie: `::questlog ::quests ::diary ::achievements
-::collection ::pkpoints ::pkspend ::daily ::event` · Trade: `::trade <naam> ::tradecancel`.
+::collection ::pkpoints ::pkspend ::daily ::event` · Trade: `::trade <naam> ::tradeoffer
+::traderemove ::tradestatus ::tradeaccept ::tradecancel`.
 
 ---
 
@@ -204,9 +205,12 @@ Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met bo
   onbekenden: trademain-cs2-init + partner-offer spiegelen (`UpdateInvFull(-(combined), 32858, ...)`).
   Anti-switch-scam: accept-flags resetten bij élke offer-mutatie. ✅ Veiligheidsbasis:
   `LoginScript.kt` zet achtergebleven `tradeoffer`-items bij login terug in de backpack, of dropt ze
-  owner-locked onder de speler als de backpack vol is. ✅ Request-handshake:
-  `PlayerTrade.kt` registreert `Trade with`/`::trade <naam>`, wederzijdse accept, timeout en
-  `::tradecancel`. Open: echte offer/confirm-schermen + atomaire item-swap.
+  owner-locked onder de speler als de backpack vol is. ✅ Command-trade v1:
+  `PlayerTrade.kt` registreert `Trade with`/`::trade <naam>`, maakt een sessie na wederzijdse
+  accept, reserveert offers in `invs.tradeoffer` via `::tradeoffer`/`::traderemove`, reset
+  accept-flags bij elke mutatie, toont `::tradestatus` en commit de swap pas bij dubbele
+  `::tradeaccept` als beide `invMoveAll(..., autoCommit=false)` checks slagen. Open: echte
+  offer/confirm-schermen met clientscript + partner-offer spiegelen.
 
 ### FASE 6 — Multiplayer, verificatie & sociaal ☐ ← **HIER STAAN WE**
 - ☐ **Live verificatie van de nieuwe batch** (gebouwd + gecommit + servers draaien, maar nog
