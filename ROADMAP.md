@@ -4,12 +4,13 @@ Doel: **elk open punt is uitvoerbaar zonder eigen onderzoek** — exacte paden, 
 build-stappen en verificatie. Paden relatief aan `C:\Users\Mike\rsmod`. ✅ klaar · ◐ deels · ☐ te doen.
 
 > **Huidige staat (v4, na de grote content-batch):** 2 werelden (W1 GE-hub/PvM 43594, W2
-> PvP/Edgeville 43595, eigen DB's), **173 scripts**. Nieuw sinds v3: NPC-aggressie via custom
+> PvP/Edgeville 43595, eigen DB's), **174 scripts**. Nieuw sinds v3: NPC-aggressie via custom
 > hunt-mode, Fight Caves-gauntlet op de echte map (area-lifecycle), persistente PK-punten
 > (varps), NPC-Grand Exchange (orderboek), quest-log/collection/hiscore-UI's (questjournal-
 > interface), boss-fases, daily events, PK-cosmetics, arena best-wave, **watchdog + backups +
 > log-rotatie** (start-worlds.ps1 / backup-saves.ps1 / rotate-logs.ps1, logs in `.data/logs/`),
-> player following (engine), Gradle-geheugen 4G. Alles gecommit (zie `git log`).
+> player following (engine), Gradle-geheugen 4G, command-trade v1, persistente social commands,
+> Alchemist's Pact en diary reward tiers. Alles gecommit (zie `git log`).
 
 ---
 
@@ -90,7 +91,7 @@ JOIN characters c ON c.id=s.character_id JOIN accounts a ON a.id=c.account_id OR
 Hub/reis: `::hub ::teleport` + Teleport Wizard-NPC · Gear/test: `::maxgear ::maxxp ::setname
 ::skillkit ::skillmats ::skillzone` · Winkels: `::pkshop ::pkmelee/ranged/magic/supplies
 ::potionshop ::store ::mikeshop ::supplyshop ::npcge` · PvM: `::mikeboss …::godboss ::bosses
-::bossslayer` · Minigames: `::arena ::arenajoin ::arenaquit ::arenatop ::fightcaves ::fightjoin
+::bossslayer ::alchemistpact` · Minigames: `::arena ::arenajoin ::arenaquit ::arenatop ::fightcaves ::fightjoin
 ::fightquit ::dice
 ::flip ::slots ::mystery` · Progressie: `::questlog ::quests ::diary ::achievements
 ::collection ::pkpoints ::pkspend ::daily ::event` · Trade: `::trade <naam> ::tradeoffer
@@ -109,7 +110,7 @@ Content in `content/custom/mikeshop/src/main/kotlin/org/rsmod/content/custom/mik
 2. **Dialogen**: `choice2..5(label, waarde, ..., title=)`, `mesbox`, `chatNpc(mesanims.x, ...)`,
    `countDialog("How many?")`, `objDialog("Choose an item.", stockMarketRestriction = true)`
    (ingebouwde GE-item-zoeker — bewezen in `NpcGrandExchange.kt`).
-3. **Persistente varp**: `9008<TAB>naam` in `.data/symbols/varp.sym` → `VarpBuilder.build("naam")`
+3. **Persistente varp**: `9009<TAB>naam` in `.data/symbols/varp.sym` → `VarpBuilder.build("naam")`
    (kaal = Perm) → `VarpReferences.find("naam")` (géén hash) → `vars[ref] = x` (ProtectedAccess)
    of `private var Player.x: Int by intVarp(ref)`. **packCache!** Zonder packCache worden writes
    bij logout stil gedropt. Live voorbeeld: `PkPoints.kt` (varps 9004/9005).
@@ -154,14 +155,14 @@ Content in `content/custom/mikeshop/src/main/kotlin/org/rsmod/content/custom/mik
 Multi-world, login-robuustheid, RSProx-targets, **watchdog (start-worlds.ps1) + backups
 (backup-saves.ps1) + log-rotatie (rotate-logs.ps1)** — afgerond.
 
-### FASE 1 — Werelden & identiteit ◐
+### FASE 1 — Werelden & identiteit ✅
 - ✅ W1 veilig (PvP-gate) · PK-punten/streaks **persistent** (varps 9004/9005) · PK-cosmetics ·
   gratis PK-shops als NPC's · world-gating
 - ✅ **Edgeville-polish**: PK-hub spawnt shop-NPC's, banker, bank booth en noticeboard. De spawned
   bank booth opent bank op op2; het noticeboard toont PK-commands, skull-prevention en wildy-range
   uitleg.
 
-### FASE 2 — Combat-diepte ◐
+### FASE 2 — Combat-diepte ✅
 - ✅ PvN+PvP · protect prayers (werkten al) · **aggressie live** (`mike_boss_aggro` op de bosses,
   huntRange 8) · **boss-fases** (`BossMechanics.kt`)
 - ✅ **Dragon dagger special attack**: refs + anim/spotanim + registratie voor normale, p, p+ en p++
@@ -174,7 +175,7 @@ Multi-world, login-robuustheid, RSProx-targets, **watchdog (start-worlds.ps1) + 
   droppen owner-locked voor de killer. Open voor later: protect-item/prayer-modifier en speciale
   untradeable-regels.
 
-### FASE 3 — Minigames & endgame ◐
+### FASE 3 — Minigames & endgame ✅
 - ✅ Arena (waves, best-wave persistent varp 9007, `::arenatop`-hiscores) · **Fight Caves** op de
   echte map (area 32763 + `mike_boss_aggro`; `::fightcaves`/`::fightquit`) · custom **collection
   log** (`::collection`) · **daily events** (`::daily`/`::event`) · dice/flip/slots/mystery ·
@@ -200,7 +201,7 @@ meer questlijnen schrijven (puur content, recepten B2/B3/B10).
 - ✅ **NPC-GE v2 (persistentie)**: Flyway-migratie `api/db/src/main/resources/db/migration/
   V7__ge_orders.sql` + lazy load/save van `NpcExchangeBook`. Open buy/sell-orders, collect-coins
   en collect-items blijven nu in de world-DB staan na restart.
-- ☐ **Echte speler-trade (Plan A — ná de 2-client-test).** Server-kant bestaat: Trade =
+- ◐ **Echte speler-trade (Plan A — ná de 2-client-test).** Server-kant bestaat: Trade =
   `onOpPlayer4` (`api/script-advanced`; labels in `content/other/login/LoginScript.kt:136`),
   offer-inv `invs.tradeoffer` (90), interfaces `trademain`(335)/`tradeside`(336)/`tradeconfirm`(334),
   atomaire swap via `invTransaction` + `select(beide offers/invs)` + 2× `moveAll` (niets commit
@@ -215,8 +216,11 @@ meer questlijnen schrijven (puur content, recepten B2/B3/B10).
   `::tradeaccept` als beide `invMoveAll(..., autoCommit=false)` checks slagen. Open: echte
   offer/confirm-schermen met clientscript + partner-offer spiegelen.
 
-### FASE 6 — Multiplayer, verificatie & sociaal ☐ ← **HIER STAAN WE**
-- ☐ **Live verificatie van de nieuwe batch** (gebouwd + gecommit + servers draaien, maar nog
+### FASE 6 — Multiplayer, verificatie & sociaal ◐ ← **HIER STAAN WE**
+- ✅ **Server-smoke grote run**: `compileKotlin` en `:server:app:installDist` groen; beide worlds
+  luisteren op 43594/43595; W1 en W2 laden **174 scripts**; beide DB's staan op schema v8; err-logs
+  schoon.
+- ☐ **Client-live verificatie van de nieuwe batch** (gebouwd + gecommit + servers draaien, maar nog
   niet in-game getest): per feature de verificatiestap draaien —
   `::mikeboss` → boss valt ZELF aan binnen 1-2 ticks (aggressie); `::fightcaves` → waves multiway-
   aggressief, dood/wegloop = nette cleanup, fee geïnd; `::npcge` → buy/sell/collect-cyclus met 2
@@ -236,15 +240,19 @@ meer questlijnen schrijven (puur content, recepten B2/B3/B10).
 
 ### FASE 7 — Polish & beheer ◐
 - ✅ Watchdog/backups/log-rotatie
-- ☐ Performance-test 3+ clients · ☐ **Niet publiek hosten** (Jagex-IP; lokaal leer-/testproject).
+- ☐ Performance-test 3+ clients · ✅ **Niet publiek hosten**: repo/roadmap blijft een lokaal
+  leer-/testproject; er is geen publieke hosting ingericht.
 
 ---
 
 ## D. AANBEVOLEN VOLGORDE
-1. **Live verificatie nieuwe batch** (Fase 6) — alles is gebouwd maar ongetest in-game; vind de
+1. **Client-live verificatie nieuwe batch** (Fase 6) — server-smoke is groen, maar echte in-game
+   flows moeten nog door de client; vind de
    bugs vóór er verder gestapeld wordt. Checklist staat hierboven.
 2. **2-client-test** (Fase 6) — ontgrendelt trade Plan A en multi-speler-waves.
-3. **Trade Plan A** (Fase 5) — medium; client-onbekenden eerst met 2 clients verifiëren.
+3. **Trade client-UI Plan A** (Fase 5) — command-trade v1 werkt server-side; echte offer/confirm-
+   schermen hebben nog clientscript/partner-offer verificatie nodig.
+4. **Performance-test 3+ clients** (Fase 7).
 
 ## E. CHECKLIST VOOR ELKE WIJZIGING (dwingend)
 1. Item/npc/loc-namen exact gevalideerd in de .sym (B12)?
