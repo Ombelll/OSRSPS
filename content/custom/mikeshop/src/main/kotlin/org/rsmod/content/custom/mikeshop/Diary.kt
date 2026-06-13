@@ -24,14 +24,14 @@ internal object DiaryVarps : VarpReferences() {
 
 internal object DiaryObjs : ObjReferences() {
     val dragon_scimitar = find("dragon_scimitar")
+    val super_combat = find("4dose2combat")
 }
 
 /**
  * ACHIEVEMENT DIARY (persistent, Phase 6).
  *
- * `::diary` toont je voortgang over de 3 quests (gelezen uit hun persistente varps). Heb je
- * alle 3 voltooid en de beloning nog niet geclaimd, dan claim je hem direct: 250.000 coins +
- * een dragon scimitar. De claim wordt in een eigen varp bijgehouden zodat het maar 1x kan.
+ * `::diary` toont je voortgang over de persistente quest-engine quests. Dezelfde diary-varp houdt
+ * het hoogste geclaimde reward-tier bij: 1 = adventurer, 2 = veteran.
  */
 class Diary @Inject constructor(private val protectedAccess: ProtectedAccessLauncher) :
     PluginScript() {
@@ -48,30 +48,47 @@ class Diary @Inject constructor(private val protectedAccess: ProtectedAccessLaun
         val q1 = vars[QuestVarps.dragonsheart] >= 3
         val q2 = vars[QuestVarps.smithmaster] >= 3
         val q3 = vars[QuestVarps.gemheist] >= 2
-        val completed = listOf(q1, q2, q3).count { it }
-        val claimed = vars[DiaryVarps.diary] >= 1
+        val q4 = vars[QuestVarps.bossslayer] >= 3
+        val q5 = vars[QuestVarps.alchemistpact] >= 3
+        val completed = listOf(q1, q2, q3, q4, q5).count { it }
+        val tier = vars[DiaryVarps.diary]
 
         val rewardLine =
             when {
-                claimed -> "Reward: already claimed"
-                completed == 3 -> "Reward: READY - claiming now!"
-                else -> "Reward: $completed / 3 quests done"
+                tier >= 2 -> "Rewards: all tiers claimed"
+                completed >= 5 && tier < 2 -> "Veteran reward: READY - claiming now!"
+                completed >= 3 && tier < 1 -> "Adventurer reward: READY - claiming now!"
+                tier >= 1 -> "Veteran reward: $completed / 5 quests done"
+                else -> "Adventurer reward: $completed / 3 quests done"
             }
         mesbox(
             "--- Quest Diary ---<br>" +
                 "The Dragon's Heart: ${mark(q1)}<br>" +
                 "The Master Smith: ${mark(q2)}<br>" +
                 "The Gem Heist: ${mark(q3)}<br>" +
+                "Boss Slayer's Trial: ${mark(q4)}<br>" +
+                "The Alchemist's Pact: ${mark(q5)}<br>" +
                 rewardLine
         )
 
-        if (completed == 3 && !claimed) {
+        if (completed >= 3 && tier < 1) {
             vars[DiaryVarps.diary] = 1
             invAdd(inv, objs.coins, 250_000)
             invAdd(inv, DiaryObjs.dragon_scimitar)
             mesbox(
                 "QUEST DIARY COMPLETE! You receive 250,000 coins and a dragon scimitar. " +
                     "You are a true Hero of the realm!"
+            )
+            return
+        }
+
+        if (completed >= 5 && tier < 2) {
+            vars[DiaryVarps.diary] = 2
+            invAdd(inv, objs.coins, 500_000)
+            invAdd(inv, DiaryObjs.super_combat, 5)
+            mesbox(
+                "QUEST DIARY VETERAN COMPLETE! You receive 500,000 coins and 5 super combat potions. " +
+                    "The realm knows your name now."
             )
         }
     }

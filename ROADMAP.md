@@ -191,7 +191,8 @@ Multi-world, login-robuustheid, RSProx-targets, **watchdog (start-worlds.ps1) + 
 ### FASE 4 — Quests & UI ✅ (basis)
 Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met boss-kill-stages
 (`::bossslayer`, varp 9006) en herblore/combat-supplies quest (`::alchemistpact`, varp 9008).
-Open: meer questlijnen schrijven (puur content, recepten B2/B3/B10).
+`::diary` heeft nu adventurer/veteran reward tiers op dezelfde persistente diary-varp. Open:
+meer questlijnen schrijven (puur content, recepten B2/B3/B10).
 
 ### FASE 5 — Economie ◐
 - ✅ 8 winkels · PK-puntenwinkel/cosmetics · geld-sinks (instance-fees, cosmetica) ·

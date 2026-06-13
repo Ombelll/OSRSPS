@@ -41,7 +41,8 @@ class Achievements @Inject constructor() : PluginScript() {
                 val next = ((kc / 10) + 1) * 10
                 player.mes("--- Your Progression ---")
                 player.mes("Boss kills: $kc (next milestone at $next -> +100k bonus)")
-                player.mes("Quests completed: ${PvmProgress.questsDone(player)} / 6")
+                player.mes("Session quest completions: ${PvmProgress.questsDone(player)}")
+                player.mes("Persistent quest progress: use ::questlog, ::diary, ::collection")
             }
         }
     }
