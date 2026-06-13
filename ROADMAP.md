@@ -72,7 +72,7 @@ Stoppen: `Get-NetTCPConnection -LocalPort 4359X -State Listen | % { Stop-Process
 ### Sym-inventaris (bezette custom ids → eerstvolgende vrij)
 | sym | bezet | volgende vrij |
 |---|---|---|
-| `varp.sym` | 9000-9003 quests/diary · 9004 pk_points · 9005 pk_kills · 9006 bossslayer · 9007 arena_best_wave | **9008** |
+| `varp.sym` | 9000-9003 quests/diary · 9004 pk_points · 9005 pk_kills · 9006 bossslayer · 9007 arena_best_wave · 9008 alchemistpact | **9009** |
 | `inv.sym` | 2000-2007 (4 hub-shops + 4 PK-shops) | **2008** |
 | `hunt.sym` | 23 `mike_boss_aggro` | **24** |
 | `area.sym` | 32763 `fight_cave_arena` | 32762 (omlaag tellen) |
@@ -190,7 +190,8 @@ Multi-world, login-robuustheid, RSProx-targets, **watchdog (start-worlds.ps1) + 
 
 ### FASE 4 — Quests & UI ✅ (basis)
 Quest-engine + **echte quest-log-UI** (questjournal 119) + questreeks 2.0 met boss-kill-stages
-(`::bossslayer`, varp 9006). Open: meer questlijnen schrijven (puur content, recepten B2/B3/B10).
+(`::bossslayer`, varp 9006) en herblore/combat-supplies quest (`::alchemistpact`, varp 9008).
+Open: meer questlijnen schrijven (puur content, recepten B2/B3/B10).
 
 ### FASE 5 — Economie ◐
 - ✅ 8 winkels · PK-puntenwinkel/cosmetics · geld-sinks (instance-fees, cosmetica) ·

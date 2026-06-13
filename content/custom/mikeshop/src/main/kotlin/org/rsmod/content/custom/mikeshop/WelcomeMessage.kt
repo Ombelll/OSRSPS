@@ -23,6 +23,7 @@ class WelcomeMessage @Inject constructor() : PluginScript() {
                 player.mes("Skilling: ::skillkit, ::skillmats, ::skillzone")
                 player.mes("Bosses: ::bosses (lists ::mikeboss..::godboss)")
                 player.mes("Quests: ::quests, ::questlog, ::dragonsheart, ::smithmaster, ::gemheist")
+                player.mes("Quests+: ::bossslayer, ::alchemistpact")
                 player.mes("Minigames: ::arena (wave survival), ::dice, ::flip, ::slots, ::mystery")
                 player.mes("Hub NPCs: Shop Clerk, Banker, Teleport Wizard (talk to them)")
                 player.mes("Travel: ::teleport, ::home, ::varrock, ::falador, ::ge, ::mine")

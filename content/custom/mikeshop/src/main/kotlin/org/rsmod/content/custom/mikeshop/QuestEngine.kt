@@ -22,6 +22,7 @@ internal object QuestVarpBuilder : VarpBuilder() {
         build("mikeq_smithmaster")
         build("mikeq_gemheist")
         build("mikeq_bossslayer")
+        build("mikeq_alchemistpact")
     }
 }
 
@@ -30,6 +31,7 @@ internal object QuestVarps : VarpReferences() {
     val smithmaster = find("mikeq_smithmaster")
     val gemheist = find("mikeq_gemheist")
     val bossslayer = find("mikeq_bossslayer")
+    val alchemistpact = find("mikeq_alchemistpact")
 }
 
 internal object QuestEngineObjs : ObjReferences() {
@@ -38,6 +40,8 @@ internal object QuestEngineObjs : ObjReferences() {
     val runite_bar = find("runite_bar")
     val diamond = find("diamond")
     val rune_platebody = find("rune_platebody")
+    val snapdragon = find("snapdragon")
+    val super_combat = find("4dose2combat")
 }
 
 internal object QuestLogInterfaces : InterfaceReferences() {
@@ -80,6 +84,10 @@ class QuestEngine @Inject constructor(private val protectedAccess: ProtectedAcce
             desc = "Quest: Boss Slayer's Trial (boss-kill stages, persistent)"
             cheat { protectedAccess.launch(player) { runBossSlayer() } }
         }
+        onCommand("alchemistpact") {
+            desc = "Quest: The Alchemist's Pact (multi-stage, persistent)"
+            cheat { protectedAccess.launch(player) { runAlchemistPact() } }
+        }
         onCommand("questlog") {
             desc = "View your quest journal"
             cheat { protectedAccess.launch(player) { showLog() } }
@@ -113,12 +121,14 @@ class QuestEngine @Inject constructor(private val protectedAccess: ProtectedAcce
                 questLine("The Master Smith", vars[QuestVarps.smithmaster], 3),
                 questLine("The Gem Heist", vars[QuestVarps.gemheist], 2),
                 questLine("Boss Slayer's Trial", vars[QuestVarps.bossslayer], 3),
+                questLine("The Alchemist's Pact", vars[QuestVarps.alchemistpact], 3),
                 "",
                 "<col=555555>Commands:</col>",
                 "::dragonsheart",
                 "::smithmaster",
                 "::gemheist",
                 "::bossslayer",
+                "::alchemistpact",
             )
 
         ifOpenMainModal(QuestLogInterfaces.questjournal)
@@ -274,6 +284,47 @@ class QuestEngine @Inject constructor(private val protectedAccess: ProtectedAcce
                 }
             }
             else -> mesbox("'Boss Slayer. The title suits you.'")
+        }
+    }
+
+    private suspend fun ProtectedAccess.runAlchemistPact() {
+        when (vars[QuestVarps.alchemistpact]) {
+            0 -> {
+                mesbox("The Battle Alchemist says: 'A good warrior wins before the first swing. Care to learn?'")
+                val accept =
+                    choice2("Teach me.", true, "Not now.", false, title = "The Alchemist's Pact")
+                if (accept) {
+                    vars[QuestVarps.alchemistpact] = 1
+                    mesbox("'Bring me 3 snapdragons. Potency begins with clean ingredients.'")
+                } else {
+                    mesbox("'Then return when your flask is empty and your curiosity is full.'")
+                }
+            }
+            1 -> {
+                if (invTotal(inv, QuestEngineObjs.snapdragon) >= 3) {
+                    invDel(inv, QuestEngineObjs.snapdragon, 3)
+                    vars[QuestVarps.alchemistpact] = 2
+                    mesbox("'Fine herbs. Now bring me a 4-dose super combat potion for the final binding.'")
+                } else {
+                    mesbox("'I need 3 snapdragons. Try skilling supplies, farming, or monster drops.'")
+                }
+            }
+            2 -> {
+                if (invTotal(inv, QuestEngineObjs.super_combat) >= 1) {
+                    invDel(inv, QuestEngineObjs.super_combat, 1)
+                    invAdd(inv, QuestEngineObjs.super_combat, 3)
+                    invAdd(inv, objs.coins, 80_000)
+                    vars[QuestVarps.alchemistpact] = 3
+                    PvmProgress.recordQuest(player)
+                    mesbox(
+                        "'Pact sealed. Take three refined super combats and 80,000 coins. " +
+                            "THE ALCHEMIST'S PACT - COMPLETE!'"
+                    )
+                } else {
+                    mesbox("'Bring me one 4-dose super combat potion. ::potionshop can help.'")
+                }
+            }
+            else -> mesbox("'The pact holds. Keep your potions stocked and your blade steady.'")
         }
     }
 }

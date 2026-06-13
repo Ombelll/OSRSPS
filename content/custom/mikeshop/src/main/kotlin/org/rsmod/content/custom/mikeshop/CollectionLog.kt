@@ -38,6 +38,7 @@ class CollectionLog @Inject constructor(private val protectedAccess: ProtectedAc
             "smithmaster" -> vars[QuestVarps.smithmaster] >= 3
             "gemheist" -> vars[QuestVarps.gemheist] >= 2
             "bossslayer" -> vars[QuestVarps.bossslayer] >= 3
+            "alchemistpact" -> vars[QuestVarps.alchemistpact] >= 3
             else -> false
         }
 
@@ -52,6 +53,7 @@ class CollectionLog @Inject constructor(private val protectedAccess: ProtectedAc
                     questDone("smithmaster"),
                     questDone("gemheist"),
                     questDone("bossslayer"),
+                    questDone("alchemistpact"),
                 )
                 .count { it }
 
@@ -65,11 +67,12 @@ class CollectionLog @Inject constructor(private val protectedAccess: ProtectedAc
                 add(doneLine("Fire cape in inventory", invTotal(inv, objs.fire_cape) > 0))
                 add("")
                 add("<col=555555>Quests</col>")
-                add(progressLine("Quest completions", questCount, 4))
+                add(progressLine("Quest completions", questCount, 5))
                 add(doneLine("The Dragon's Heart", questDone("dragonsheart")))
                 add(doneLine("The Master Smith", questDone("smithmaster")))
                 add(doneLine("The Gem Heist", questDone("gemheist")))
                 add(doneLine("Boss Slayer's Trial", questDone("bossslayer")))
+                add(doneLine("The Alchemist's Pact", questDone("alchemistpact")))
                 add(doneLine("Quest Diary reward", vars[DiaryVarps.diary] >= 1))
                 add("")
                 add("<col=555555>PvM</col>")

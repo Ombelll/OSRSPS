@@ -135,7 +135,7 @@ class QuestPack @Inject constructor(private val protectedAccess: ProtectedAccess
             cheat {
                 player.mes("Quests:")
                 player.mes("::quest (Cabbage of Power), ::smithquest, ::gemquest,")
-                player.mes("::dragonquest, ::fishquest, ::huntquest")
+                player.mes("::dragonquest, ::fishquest, ::huntquest, ::alchemistpact")
             }
         }
     }
