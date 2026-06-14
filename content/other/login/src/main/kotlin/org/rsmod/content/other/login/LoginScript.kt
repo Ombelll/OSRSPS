@@ -51,6 +51,7 @@ constructor(
     private val invisibleLevels: InvisibleLevels,
 ) : PluginScript() {
     private val transmitVars by lazy { transmitVars() }
+    private val pvpWorld = System.getenv("RSMOD_WORLD") == "2"
 
     private var Player.chatboxUnlocked: Boolean by boolVarBit(varbits.has_displayname_transmitter)
     private var Player.hideRoofs by boolVarBit(varbits.option_hide_rooftops)
@@ -159,7 +160,7 @@ constructor(
     }
 
     private fun Player.sendPlayerOps() {
-        MiscOutput.setPlayerOp(this, slot = 2, op = null)
+        MiscOutput.setPlayerOp(this, slot = 2, op = if (pvpWorld) "Attack" else null, priority = pvpWorld)
         MiscOutput.setPlayerOp(this, slot = 3, op = "Follow")
         MiscOutput.setPlayerOp(this, slot = 4, op = "Trade with")
         MiscOutput.setPlayerOp(this, slot = 5, op = null)
