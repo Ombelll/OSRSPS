@@ -4,13 +4,14 @@ Doel: **elk open punt is uitvoerbaar zonder eigen onderzoek** — exacte paden, 
 build-stappen en verificatie. Paden relatief aan `C:\Users\Mike\rsmod`. ✅ klaar · ◐ deels · ☐ te doen.
 
 > **Huidige staat (v4, na de grote content-batch):** 2 werelden (W1 GE-hub/PvM 43594, W2
-> PvP/Edgeville 43595, eigen DB's), **174 scripts**. Nieuw sinds v3: NPC-aggressie via custom
+> PvP/Edgeville 43595, eigen DB's), **175 scripts**. Nieuw sinds v3: NPC-aggressie via custom
 > hunt-mode, Fight Caves-gauntlet op de echte map (area-lifecycle), persistente PK-punten
 > (varps), NPC-Grand Exchange (orderboek), quest-log/collection/hiscore-UI's (questjournal-
 > interface), boss-fases, daily events, PK-cosmetics, arena best-wave, **watchdog + backups +
 > log-rotatie** (start-worlds.ps1 / backup-saves.ps1 / rotate-logs.ps1, logs in `.data/logs/`),
 > player following (engine), Gradle-geheugen 4G, command-trade v1, persistente social commands,
-> Alchemist's Pact en diary reward tiers. Alles gecommit (zie `git log`).
+> Alchemist's Pact, diary reward tiers en Wilderness ditch jump-handler. Alles gecommit
+> (zie `git log`).
 
 ---
 
@@ -174,6 +175,9 @@ Multi-world, login-robuustheid, RSProx-targets, **watchdog (start-worlds.ps1) + 
   player-kill houdt het slachtoffer de top 3 waardevolle item-stacks; overige inventory+worn items
   droppen owner-locked voor de killer. Open voor later: protect-item/prayer-modifier en speciale
   untradeable-regels.
+- ✅ **Wilderness ditch**: `WildernessDitch.kt` bindt `ditch_wilderness_cover` en
+  `ditch_wilderness_cover_members` op `wild_ditch_jump`; spelers kunnen noord/zuid over de ditch
+  springen voor de W2 wilderness/PvP-test.
 
 ### FASE 3 — Minigames & endgame ✅
 - ✅ Arena (waves, best-wave persistent varp 9007, `::arenatop`-hiscores) · **Fight Caves** op de
@@ -219,7 +223,7 @@ meer questlijnen schrijven (puur content, recepten B2/B3/B10).
 
 ### FASE 6 — Multiplayer, verificatie & sociaal ◐ ← **HIER STAAN WE**
 - ✅ **Server-smoke grote run**: `compileKotlin` en `:server:app:installDist` groen; beide worlds
-  luisteren op 43594/43595; W1 en W2 laden **174 scripts**; beide DB's staan op schema v8; err-logs
+  luisteren op 43594/43595; W1 en W2 laden **175 scripts**; beide DB's staan op schema v8; err-logs
   schoon.
 - ◐ **Client-live verificatie W1**: QA-run via echte RSProx-client met speler `Mike` op W1; geen
   crashes/dupes/item-verlies; `world1.err.log` bleef leeg. ✅ login/spawn GE, `::mikeboss`
