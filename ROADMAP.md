@@ -94,7 +94,7 @@ Hub/reis: `::hub ::teleport` + Teleport Wizard-NPC · Gear/test: `::maxgear ::ma
 ::bossslayer ::alchemistpact` · Minigames: `::arena ::arenajoin ::arenaquit ::arenatop ::fightcaves ::fightjoin
 ::fightquit ::dice
 ::flip ::slots ::mystery` · Progressie: `::questlog ::quests ::diary ::achievements
-::collection ::pkpoints ::pkspend ::daily ::event` · Trade: `::trade <naam> ::tradeoffer
+::collection ::pkpoints ::pkspend ::daily ::event` · Admin/test: `::invadd coins 100000` · Trade: `::trade <naam> ::tradeoffer
 ::traderemove ::tradestatus ::tradeaccept ::tradecancel` · Sociaal: `::online ::pm ::reply
 ::friendadd ::frienddel ::friends ::clancreate ::clanjoin ::clanmsg ::clanwho ::clanleave`.
 
@@ -209,7 +209,8 @@ meer questlijnen schrijven (puur content, recepten B2/B3/B10).
   onbekenden: trademain-cs2-init + partner-offer spiegelen (`UpdateInvFull(-(combined), 32858, ...)`).
   Anti-switch-scam: accept-flags resetten bij élke offer-mutatie. ✅ Veiligheidsbasis:
   `LoginScript.kt` zet achtergebleven `tradeoffer`-items bij login terug in de backpack, of dropt ze
-  owner-locked onder de speler als de backpack vol is. ✅ Command-trade v1:
+  owner-locked onder de speler als de backpack vol is; QA-opmerking over logout-stranden is dus
+  verouderd voor login-herstel, maar 2-client logout-mid-trade blijft nog live te testen. ✅ Command-trade v1:
   `PlayerTrade.kt` registreert `Trade with`/`::trade <naam>`, maakt een sessie na wederzijdse
   accept, reserveert offers in `invs.tradeoffer` via `::tradeoffer`/`::traderemove`, reset
   accept-flags bij elke mutatie, toont `::tradestatus` en commit de swap pas bij dubbele
@@ -220,12 +221,13 @@ meer questlijnen schrijven (puur content, recepten B2/B3/B10).
 - ✅ **Server-smoke grote run**: `compileKotlin` en `:server:app:installDist` groen; beide worlds
   luisteren op 43594/43595; W1 en W2 laden **174 scripts**; beide DB's staan op schema v8; err-logs
   schoon.
-- ☐ **Client-live verificatie van de nieuwe batch** (gebouwd + gecommit + servers draaien, maar nog
-  niet in-game getest): per feature de verificatiestap draaien —
-  `::mikeboss` → boss valt ZELF aan binnen 1-2 ticks (aggressie); `::fightcaves` → waves multiway-
-  aggressief, dood/wegloop = nette cleanup, fee geïnd; `::npcge` → buy/sell/collect-cyclus met 2
-  accounts; `::collection ::arenatop ::questlog` → UI's openen + close-knop werkt; `::daily` →
-  event activeert; boss-fases zichtbaar bij HP-drempels; `::pkspend` cosmetics.
+- ◐ **Client-live verificatie W1**: QA-run via echte RSProx-client met speler `Mike` op W1; geen
+  crashes/dupes/item-verlies; `world1.err.log` bleef leeg. ✅ login/spawn GE, `::mikeboss`
+  auto-aggressie op open grond, Fight Caves fee-gate zonder coins, `::npcge` buy/view/sell-validatie,
+  `::questlog ::collection ::arenatop ::diary`, `::daily ::event`, `::bossslayer ::alchemistpact`,
+  solo social basics (`::online ::friends ::clancreate ::clanwho`). Nog open: Fight Caves echte
+  waves/quit/death-cleanup met coins (`::invadd coins 100000`), boss-fase 50%/25% live vastleggen,
+  NPC-GE 2-account match + cross-restart persistentie, `::pkspend` cosmetics.
 - ☐ **Structurele 2-client-test** (W2): PvP-duel → `::pkpoints` klopt bij beide; samen arena;
   uitloggen/herstarten → punten persistent.
 - ✅ **Hiscores-webpagina**: `hiscores-web.ps1` start een lokale read-only pagina op
