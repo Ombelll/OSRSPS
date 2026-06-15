@@ -90,10 +90,12 @@ constructor(
             player.invTransaction(sideInv) {
                 val inv = select(sideInv)
                 val shop = select(shopInv)
-                delete {
-                    this.from = inv
-                    this.obj = currencyObj.id
-                    this.strictCount = finalPurchaseCost
+                if (finalPurchaseCost > 0) {
+                    delete {
+                        this.from = inv
+                        this.obj = currencyObj.id
+                        this.strictCount = finalPurchaseCost
+                    }
                 }
                 delete {
                     this.from = shop
@@ -108,8 +110,8 @@ constructor(
             }
 
         val success = transaction.success
-        val currencyDel = transaction.results[0]
-        val stockObjAdd = transaction.results.getOrNull(2)
+        val currencyDel = if (finalPurchaseCost > 0) transaction.results[0] else null
+        val stockObjAdd = transaction.results.getOrNull(if (finalPurchaseCost > 0) 2 else 1)
 
         val message =
             when {
@@ -117,7 +119,7 @@ constructor(
                 currencyDel == TransactionResult.NotEnoughObjCount -> NOT_ENOUGH_COINS
                 stockObjAdd == TransactionResult.NotEnoughSpace -> NOT_ENOUGH_INV_SPACE
                 success && finalPurchaseCount < initialPurchaseRequest -> {
-                    if (availableCurrencyCount <= finalPurchaseCost) {
+                    if (finalPurchaseCost > 0 && availableCurrencyCount <= finalPurchaseCost) {
                         NOT_ENOUGH_COINS
                     } else {
                         NOT_ENOUGH_INV_SPACE

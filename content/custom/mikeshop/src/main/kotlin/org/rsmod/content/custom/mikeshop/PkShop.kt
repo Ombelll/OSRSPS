@@ -50,6 +50,8 @@ internal object PkClerkNpcs : NpcReferences() {
     val ranged = find("ge_clerk_3")
     val magic = find("ge_clerk_4")
     val supply = find("farming_shopkeeper_1")
+    val food = find("warguild_food_shopkeeper")
+    val potions = find("warguild_potion_shopkeeper")
     val banker = find("banker1")
 }
 
@@ -63,6 +65,8 @@ internal object PkShopInvs : InvReferences() {
     val ranged = find("pk_ranged_shop")
     val magic = find("pk_magic_shop")
     val supply = find("pk_supply_shop")
+    val food = find("pk_food_shop")
+    val potions = find("pk_potion_shop")
 }
 
 internal object PkObjs : ObjReferences() {
@@ -458,6 +462,49 @@ internal object PkSupplyShopBuilder : InvBuilder() {
     }
 }
 
+internal object PkFoodShopBuilder : InvBuilder() {
+    init {
+        build("pk_food_shop") {
+            scope = InvScope.Shared
+            stack = InvStackType.Always
+            autoSize = true
+            restock = true
+            stock += stock(PkObjs.shark, count = 1000, restockCycles = 5)
+            stock += stock(PkObjs.lobster, count = 1000, restockCycles = 5)
+            stock += stock(PkObjs.swordfish, count = 1000, restockCycles = 5)
+            stock += stock(PkObjs.monkfish, count = 1000, restockCycles = 5)
+            stock += stock(PkObjs.anglerfish, count = 1000, restockCycles = 5)
+            stock += stock(PkObjs.dark_crab, count = 1000, restockCycles = 5)
+            stock += stock(PkObjs.cooked_karambwan, count = 1000, restockCycles = 5)
+        }
+    }
+}
+
+internal object PkPotionShopBuilder : InvBuilder() {
+    init {
+        build("pk_potion_shop") {
+            scope = InvScope.Shared
+            stack = InvStackType.Always
+            autoSize = true
+            restock = true
+            stock += stock(PkObjs.saradomin_brew, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.super_restore, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.prayer_pot4, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.super_combat, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.divine_combat, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.ranging_pot, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.magic_pot, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.stamina_pot, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.super_attack, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.super_strength, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.attack_pot, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.strength_pot, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.stat_restore, count = 500, restockCycles = 10)
+            stock += stock(PkObjs.prayer_restore, count = 500, restockCycles = 10)
+        }
+    }
+}
+
 /**
  * ::pkshop -> keuzemenu met 4 GRATIS PK-winkels (Melee / Ranged / Magic / Supplies). Alles kost 0
  * coins (buyPercentage = 0.0), zodat spelers op de PvP-world (Edgeville) zich meteen kunnen gearen.
@@ -491,6 +538,10 @@ constructor(
         onOpNpc1(PkClerkNpcs.supply) {
             openFree(player, "Free PK Supplies Shop", PkShopInvs.supply)
         }
+        onOpNpc1(PkClerkNpcs.food) { openFree(player, "Free PK Food Shop", PkShopInvs.food) }
+        onOpNpc1(PkClerkNpcs.potions) {
+            openFree(player, "Free PK Potions Shop", PkShopInvs.potions)
+        }
         onOpLoc2(PkLocs.bankbooth) { openEdgevilleBank() }
         onOpLoc1(PkLocs.noticeboard) { readEdgevilleNoticeboard(it.loc.coords) }
 
@@ -513,6 +564,14 @@ constructor(
         onCommand("pksupplies") {
             desc = "Free PK supplies shop"
             cheat { openFree(player, "Free PK Supplies Shop", PkShopInvs.supply) }
+        }
+        onCommand("pkfood") {
+            desc = "Free PK food shop"
+            cheat { openFree(player, "Free PK Food Shop", PkShopInvs.food) }
+        }
+        onCommand("pkpots") {
+            desc = "Free PK potions shop"
+            cheat { openFree(player, "Free PK Potions Shop", PkShopInvs.potions) }
         }
     }
 
@@ -562,6 +621,7 @@ constructor(
         mesbox(
             "Edgeville PvP hub<br>" +
                 "::pkshop opens free gear shops.<br>" +
+                "::pkfood / ::pkpots open food and potion shops.<br>" +
                 "::pkpoints shows your kills and points.<br>" +
                 "::pkspend opens the cosmetics shop.<br>" +
                 "Skull prevention is respected; wilderness level ranges apply north of the ditch."
@@ -574,6 +634,8 @@ constructor(
         spawnNpc(PkClerkNpcs.ranged, PK_EDGE.translate(2, 2))
         spawnNpc(PkClerkNpcs.magic, PK_EDGE.translate(3, 2))
         spawnNpc(PkClerkNpcs.supply, PK_EDGE.translate(4, 2))
+        spawnNpc(PkClerkNpcs.food, PK_EDGE.translate(5, 2))
+        spawnNpc(PkClerkNpcs.potions, PK_EDGE.translate(6, 2))
         spawnNpc(PkClerkNpcs.banker, PK_EDGE.translate(-2, 2))
         spawnLoc(PkLocs.bankbooth, PK_EDGE.translate(-3, 2), LocAngle.East)
         spawnLoc(PkLocs.noticeboard, PK_EDGE.translate(-1, 2), LocAngle.South)

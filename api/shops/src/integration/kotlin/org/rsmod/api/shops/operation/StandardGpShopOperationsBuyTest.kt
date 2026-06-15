@@ -124,6 +124,20 @@ class StandardGpShopOperationsBuyTest {
             assertNoMessageSent()
         }
 
+    @Test
+    fun GameTestState.`buy free obj successfully with no coins`() =
+        runGameTest(ShopScript::class) {
+            val shop = openGeneralShop(sellPercentage = 0.0, changePercentage = 0.0)
+            shop.inv[0] = InvObj(objs.newcomer_map, 5)
+
+            buyStock(shop, objs.newcomer_map, OP_BUY5)
+
+            assertEquals(0, shop.inv.count(objs.newcomer_map))
+            assertEquals(5, player.count(objs.newcomer_map))
+            assertEquals(0, player.count(objs.coins))
+            assertNoMessageSent()
+        }
+
     private fun GameTestScope.buyStock(shop: Shop, obj: ObjType, op: IfButtonOp) {
         val slot = shop.inv.indexOfFirst { it?.id == obj.id }
         check(slot != -1) { "Obj not found in stock: obj=$obj, stock=${shop.inv}" }
@@ -133,7 +147,10 @@ class StandardGpShopOperationsBuyTest {
         advance(ticks = 1)
     }
 
-    private fun GameTestScope.openGeneralShop(): Shop {
+    private fun GameTestScope.openGeneralShop(
+        sellPercentage: Double = 130.0,
+        changePercentage: Double = 3.0,
+    ): Shop {
         val inventory = createShopInv()
         val invTypes = InvTypeList(mutableMapOf(inventory.type.id to inventory.type))
         val shops = Shops(invTypes, eventBus)
@@ -145,8 +162,8 @@ class StandardGpShopOperationsBuyTest {
             sideInv = player.inv,
             currency = currencies.standard_gp,
             buyPercentage = 40.0,
-            sellPercentage = 130.0,
-            changePercentage = 3.0,
+            sellPercentage = sellPercentage,
+            changePercentage = changePercentage,
             subtext = "",
         )
 

@@ -76,7 +76,7 @@ Stoppen: `Get-NetTCPConnection -LocalPort 4359X -State Listen | % { Stop-Process
 | sym | bezet | volgende vrij |
 |---|---|---|
 | `varp.sym` | 9000-9003 quests/diary · 9004 pk_points · 9005 pk_kills · 9006 bossslayer · 9007 arena_best_wave · 9008 alchemistpact | **9009** |
-| `inv.sym` | 2000-2007 (4 hub-shops + 4 PK-shops) | **2008** |
+| `inv.sym` | 2000-2009 (4 hub-shops + 6 PK-shops) | **2010** |
 | `hunt.sym` | 23 `mike_boss_aggro` | **24** |
 | `area.sym` | 32763 `fight_cave_arena` | 32762 (omlaag tellen) |
 
@@ -91,7 +91,7 @@ JOIN characters c ON c.id=s.character_id JOIN accounts a ON a.id=c.account_id OR
 
 ### Commando-index (voor tests; `::help` in-game toont de spelerslijst)
 Hub/reis: `::hub ::teleport` + Teleport Wizard-NPC · Gear/test: `::maxgear ::unlockprayers ::ancients ::maxxp ::setname
-::skillkit ::skillmats ::skillzone` · Winkels: `::pkshop ::pkmelee/ranged/magic/supplies
+::skillkit ::skillmats ::skillzone` · Winkels: `::pkshop ::pkmelee/ranged/magic/supplies ::pkfood ::pkpots
 ::potionshop ::store ::mikeshop ::supplyshop ::npcge` · PvM: `::mikeboss …::godboss ::bosses
 ::bossslayer ::alchemistpact` · Minigames: `::arena ::arenajoin ::arenaquit ::arenatop ::fightcaves ::fightjoin
 ::fightquit ::dice
