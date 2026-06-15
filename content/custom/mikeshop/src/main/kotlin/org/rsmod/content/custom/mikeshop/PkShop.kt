@@ -102,9 +102,21 @@ internal object PkObjs : ObjReferences() {
     val primordial_boots = find("primordial_boots")
     val ferocious_gloves = find("ferocious_gloves")
     val infernal_cape = find("infernal_cape")
+    val imbued_saradomin_cape = find("ma2_saradomin_cape")
+    val imbued_guthix_cape = find("ma2_guthix_cape")
+    val imbued_zamorak_cape = find("ma2_zamorak_cape")
     val amulet_of_strength = find("amulet_of_strength")
     val amulet_of_glory = find("amulet_of_glory")
     val ultor_ring = find("ultor_ring")
+    val ring_of_suffering_ri = find("nzone_zenyte_ring_enchanted_recoil")
+    val barrows_gloves = find("hundred_gauntlets_level_10")
+    val tormented_bracelet = find("zenyte_bracelet_enchanted")
+    val spirit_shield = find("spirit_shield")
+    val blessed_spirit_shield = find("blessed_spirit_shield")
+    val elysian_spirit_shield = find("elysian")
+    val spectral_spirit_shield = find("spectral")
+    val arcane_spirit_shield = find("arcane")
+    val avernic_treads = find("avernic_treads")
     // --- Ranged ---
     val magic_shortbow = find("magic_shortbow")
     val magic_longbow = find("magic_longbow")
@@ -115,6 +127,11 @@ internal object PkObjs : ObjReferences() {
     val karil_body = find("barrows_karil_body")
     val karil_legs = find("barrows_karil_legs")
     val karil_weapon = find("barrows_karil_weapon")
+    val masori_mask = find("masori_mask_fortified")
+    val masori_body = find("masori_body_fortified")
+    val masori_chaps = find("masori_chaps_fortified")
+    val dizanas_quiver = find("dizanas_quiver_infinite")
+    val zaryte_vambraces = find("zaryte_vambraces")
     // --- Magic ---
     val merfolk_trident = find("merfolk_trident")
     val staff_of_fire = find("staff_of_fire")
@@ -128,6 +145,7 @@ internal object PkObjs : ObjReferences() {
     val ahrim_legs = find("barrows_ahrim_legs")
     val ahrim_weapon = find("barrows_ahrim_weapon")
     val occult_necklace = find("occult_necklace")
+    val saturated_heart = find("saturated_heart")
     // --- Runes ---
     val airrune = find("airrune")
     val waterrune = find("waterrune")
@@ -304,6 +322,11 @@ internal object PkRangedShopBuilder : InvBuilder() {
             stock += stock(PkObjs.karil_body, count = 100, restockCycles = 25)
             stock += stock(PkObjs.karil_legs, count = 100, restockCycles = 25)
             stock += stock(PkObjs.karil_weapon, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.masori_mask, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.masori_body, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.masori_chaps, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.dizanas_quiver, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.zaryte_vambraces, count = 100, restockCycles = 25)
             // Uitbreiding - ranged armour:
             stock += stock(PkObjs.black_dhide_body, count = 100, restockCycles = 25)
             stock += stock(PkObjs.black_dhide_chaps, count = 100, restockCycles = 25)
@@ -342,6 +365,11 @@ internal object PkMagicShopBuilder : InvBuilder() {
                     PkObjs.ahrim_legs,
                     PkObjs.ahrim_weapon,
                     PkObjs.occult_necklace,
+                    PkObjs.tormented_bracelet,
+                    PkObjs.saturated_heart,
+                    PkObjs.imbued_saradomin_cape,
+                    PkObjs.imbued_guthix_cape,
+                    PkObjs.imbued_zamorak_cape,
                     // Uitbreiding:
                     PkObjs.kodai_wand,
                     PkObjs.master_wand,
@@ -354,6 +382,7 @@ internal object PkMagicShopBuilder : InvBuilder() {
                     PkObjs.infinity_bottom,
                     PkObjs.eternal_boots,
                     PkObjs.divine_rune_pouch,
+                    PkObjs.arcane_spirit_shield,
                 )
             for (obj in gear) {
                 stock += stock(obj, count = 100, restockCycles = 25)
@@ -398,6 +427,14 @@ internal object PkSupplyShopBuilder : InvBuilder() {
             stock += stock(PkObjs.stat_restore, count = 500, restockCycles = 10)
             stock += stock(PkObjs.prayer_restore, count = 500, restockCycles = 10)
             stock += stock(PkObjs.looting_bag, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.barrows_gloves, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.ring_of_suffering_ri, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.avernic_treads, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.spirit_shield, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.blessed_spirit_shield, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.elysian_spirit_shield, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.spectral_spirit_shield, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.arcane_spirit_shield, count = 100, restockCycles = 25)
             stock += stock(PkObjs.prayer_scroll_rigour, count = 100, restockCycles = 25)
             stock += stock(PkObjs.prayer_scroll_preserve, count = 100, restockCycles = 25)
             stock += stock(PkObjs.prayer_scroll_augury, count = 100, restockCycles = 25)
