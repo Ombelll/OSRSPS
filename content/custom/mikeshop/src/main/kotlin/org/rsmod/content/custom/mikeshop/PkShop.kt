@@ -75,6 +75,8 @@ internal object PkObjs : ObjReferences() {
     val dragon_longsword = find("dragon_longsword")
     val rune_scimitar = find("rune_scimitar")
     val dragon_mace = find("dragon_mace")
+    val armadyl_godsword = find("ags")
+    val osmumtens_fang = find("osmumtens_fang")
     // --- Melee armour ---
     val neitiznot_faceguard = find("neitiznot_faceguard")
     val slayer_helm_i = find("slayer_helm_i")
@@ -88,6 +90,13 @@ internal object PkObjs : ObjReferences() {
     val dharok_body = find("barrows_dharok_body")
     val dharok_legs = find("barrows_dharok_legs")
     val dharok_weapon = find("barrows_dharok_weapon")
+    val torva_helm = find("torva_helm")
+    val torva_chest = find("torva_chest")
+    val torva_legs = find("torva_legs")
+    val inquisitors_helm = find("inquisitors_helm")
+    val inquisitors_body = find("inquisitors_body")
+    val inquisitors_skirt = find("inquisitors_skirt")
+    val inquisitors_mace = find("inquisitors_mace")
     // --- Accessories ---
     val dragon_boots = find("dragon_boots")
     val primordial_boots = find("primordial_boots")
@@ -109,6 +118,8 @@ internal object PkObjs : ObjReferences() {
     // --- Magic ---
     val merfolk_trident = find("merfolk_trident")
     val staff_of_fire = find("staff_of_fire")
+    val ancient_staff = find("staff_of_zaros")
+    val toxic_staff_of_the_dead = find("toxic_sotd_charged")
     val mystic_hat = find("mystic_hat")
     val mystic_robe_top = find("mystic_robe_top")
     val mystic_robe_bottom = find("mystic_robe_bottom")
@@ -142,6 +153,11 @@ internal object PkObjs : ObjReferences() {
     val stat_restore = find("3dosestatrestore")
     val prayer_restore = find("3doseprayerrestore")
     val looting_bag = find("looting_bag")
+    val prayer_scroll_rigour = find("raids_prayerscroll")
+    val prayer_scroll_preserve = find("raids_prayerscroll_preserve")
+    val prayer_scroll_augury = find("raids_prayerscroll_augury")
+    val prayer_scroll_deadeye = find("deadeye_prayer_scroll")
+    val prayer_scroll_mystic_vigour = find("mystic_vigour_prayer_scroll")
 
     // === Uitbreiding ===
     // Melee weapons:
@@ -220,6 +236,8 @@ internal object PkMeleeShopBuilder : InvBuilder() {
                     PkObjs.dragon_longsword,
                     PkObjs.rune_scimitar,
                     PkObjs.dragon_mace,
+                    PkObjs.armadyl_godsword,
+                    PkObjs.osmumtens_fang,
                     PkObjs.neitiznot_faceguard,
                     PkObjs.slayer_helm_i,
                     PkObjs.rune_full_helm,
@@ -232,6 +250,13 @@ internal object PkMeleeShopBuilder : InvBuilder() {
                     PkObjs.dharok_body,
                     PkObjs.dharok_legs,
                     PkObjs.dharok_weapon,
+                    PkObjs.torva_helm,
+                    PkObjs.torva_chest,
+                    PkObjs.torva_legs,
+                    PkObjs.inquisitors_helm,
+                    PkObjs.inquisitors_body,
+                    PkObjs.inquisitors_skirt,
+                    PkObjs.inquisitors_mace,
                     PkObjs.dragon_boots,
                     PkObjs.primordial_boots,
                     PkObjs.ferocious_gloves,
@@ -306,6 +331,8 @@ internal object PkMagicShopBuilder : InvBuilder() {
                 listOf(
                     PkObjs.merfolk_trident,
                     PkObjs.staff_of_fire,
+                    PkObjs.ancient_staff,
+                    PkObjs.toxic_staff_of_the_dead,
                     PkObjs.mystic_hat,
                     PkObjs.mystic_robe_top,
                     PkObjs.mystic_robe_bottom,
@@ -370,6 +397,11 @@ internal object PkSupplyShopBuilder : InvBuilder() {
             stock += stock(PkObjs.stat_restore, count = 500, restockCycles = 10)
             stock += stock(PkObjs.prayer_restore, count = 500, restockCycles = 10)
             stock += stock(PkObjs.looting_bag, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.prayer_scroll_rigour, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.prayer_scroll_preserve, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.prayer_scroll_augury, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.prayer_scroll_deadeye, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.prayer_scroll_mystic_vigour, count = 100, restockCycles = 25)
             // Uitbreiding - food:
             stock += stock(PkObjs.anglerfish, count = 1000, restockCycles = 5)
             stock += stock(PkObjs.dark_crab, count = 1000, restockCycles = 5)

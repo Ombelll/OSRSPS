@@ -4,13 +4,14 @@ Doel: **elk open punt is uitvoerbaar zonder eigen onderzoek** — exacte paden, 
 build-stappen en verificatie. Paden relatief aan `C:\Users\Mike\rsmod`. ✅ klaar · ◐ deels · ☐ te doen.
 
 > **Huidige staat (v4, na de grote content-batch):** 2 werelden (W1 GE-hub/PvM 43594, W2
-> PvP/Edgeville 43595, eigen DB's), **175 scripts**. Nieuw sinds v3: NPC-aggressie via custom
+> PvP/Edgeville 43595, eigen DB's), **176 scripts**. Nieuw sinds v3: NPC-aggressie via custom
 > hunt-mode, Fight Caves-gauntlet op de echte map (area-lifecycle), persistente PK-punten
 > (varps), NPC-Grand Exchange (orderboek), quest-log/collection/hiscore-UI's (questjournal-
 > interface), boss-fases, daily events, PK-cosmetics, arena best-wave, **watchdog + backups +
 > log-rotatie** (start-worlds.ps1 / backup-saves.ps1 / rotate-logs.ps1, logs in `.data/logs/`),
 > player following (engine), Gradle-geheugen 4G, command-trade v1, persistente social commands,
-> Alchemist's Pact, diary reward tiers en Wilderness ditch jump-handler. Alles gecommit
+> Alchemist's Pact, diary reward tiers, Wilderness ditch jump-handler, PvP BIS gear/scroll shops,
+> `::unlockprayers` en `::ancients`. Alles gecommit
 > (zie `git log`).
 
 ---
@@ -89,7 +90,7 @@ Hiscores: `SELECT a.display_name, s.stat_id, s.base_level, s.fine_xp/10 xp FROM 
 JOIN characters c ON c.id=s.character_id JOIN accounts a ON a.id=c.account_id ORDER BY xp DESC;`
 
 ### Commando-index (voor tests; `::help` in-game toont de spelerslijst)
-Hub/reis: `::hub ::teleport` + Teleport Wizard-NPC · Gear/test: `::maxgear ::maxxp ::setname
+Hub/reis: `::hub ::teleport` + Teleport Wizard-NPC · Gear/test: `::maxgear ::unlockprayers ::ancients ::maxxp ::setname
 ::skillkit ::skillmats ::skillzone` · Winkels: `::pkshop ::pkmelee/ranged/magic/supplies
 ::potionshop ::store ::mikeshop ::supplyshop ::npcge` · PvM: `::mikeboss …::godboss ::bosses
 ::bossslayer ::alchemistpact` · Minigames: `::arena ::arenajoin ::arenaquit ::arenatop ::fightcaves ::fightjoin
@@ -223,7 +224,7 @@ meer questlijnen schrijven (puur content, recepten B2/B3/B10).
 
 ### FASE 6 — Multiplayer, verificatie & sociaal ◐ ← **HIER STAAN WE**
 - ✅ **Server-smoke grote run**: `compileKotlin` en `:server:app:installDist` groen; beide worlds
-  luisteren op 43594/43595; W1 en W2 laden **175 scripts**; beide DB's staan op schema v8; err-logs
+  luisteren op 43594/43595; W1 en W2 laden **176 scripts**; beide DB's staan op schema v8; err-logs
   schoon.
 - ◐ **Client-live verificatie W1**: QA-run via echte RSProx-client met speler `Mike` op W1; geen
   crashes/dupes/item-verlies; `world1.err.log` bleef leeg. ✅ login/spawn GE, `::mikeboss`
