@@ -39,6 +39,10 @@ internal object MaxGearObjs : ObjReferences() {
     val ultor_ring = find("ultor_ring")
     val infernal_cape = find("infernal_cape")
     val super_combat = find("4dose2combat")
+    val anglerfish = find("anglerfish")
+    val cooked_karambwan = find("tbwt_cooked_karambwan")
+    val saradomin_brew = find("4dosepotionofsaradomin")
+    val super_restore = find("4dose2restore")
 
     val dharok_head = find("barrows_dharok_head")
     val dharok_body = find("barrows_dharok_body")
@@ -130,6 +134,10 @@ class MaxGear @Inject constructor() : PluginScript() {
                 player.invAdd(player.inv, MaxGearObjs.soulrune, 1000, strict = false)
 
                 player.invAdd(player.inv, MaxGearObjs.super_combat, 1, strict = false)
+                player.invAdd(player.inv, MaxGearObjs.anglerfish, 4, strict = false)
+                player.invAdd(player.inv, MaxGearObjs.cooked_karambwan, 4, strict = false)
+                player.invAdd(player.inv, MaxGearObjs.saradomin_brew, 4, strict = false)
+                player.invAdd(player.inv, MaxGearObjs.super_restore, 4, strict = false)
                 player.statBoost(stats.attack, constant = 5, percent = 15)
                 player.statBoost(stats.strength, constant = 5, percent = 15)
                 player.statBoost(stats.defence, constant = 5, percent = 15)

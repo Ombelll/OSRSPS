@@ -204,6 +204,7 @@ internal object PkObjs : ObjReferences() {
     val anglerfish = find("anglerfish")
     val dark_crab = find("dark_crab")
     val cooked_karambwan = find("tbwt_cooked_karambwan")
+    val saradomin_brew = find("4dosepotionofsaradomin")
     val super_restore = find("4dose2restore")
     val prayer_pot4 = find("4doseprayerrestore")
     val ranging_pot = find("4doserangerspotion")
@@ -407,6 +408,7 @@ internal object PkSupplyShopBuilder : InvBuilder() {
             stock += stock(PkObjs.dark_crab, count = 1000, restockCycles = 5)
             stock += stock(PkObjs.cooked_karambwan, count = 1000, restockCycles = 5)
             // Uitbreiding - potions:
+            stock += stock(PkObjs.saradomin_brew, count = 500, restockCycles = 10)
             stock += stock(PkObjs.super_restore, count = 500, restockCycles = 10)
             stock += stock(PkObjs.prayer_pot4, count = 500, restockCycles = 10)
             stock += stock(PkObjs.ranging_pot, count = 500, restockCycles = 10)
