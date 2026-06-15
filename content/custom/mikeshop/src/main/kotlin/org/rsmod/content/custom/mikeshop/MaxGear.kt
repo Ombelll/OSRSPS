@@ -87,11 +87,11 @@ internal object MaxGearObjs : ObjReferences() {
     val soulrune = find("soulrune")
 }
 
-/** ::maxgear -> PK-testloadout met max stats, prayer unlocks, Ancients en veel switches. */
+/** ::maxgear -> PK-testloadout met max stats, unlocks, Ancients en veel switches. */
 class MaxGear @Inject constructor() : PluginScript() {
     override fun ScriptContext.startup() {
         onCommand("maxgear") {
-            desc = "Test: Torva/Fang, switches, 99 combat, prayer unlocks + Ancient Magicks"
+            desc = "Test: Torva/Fang, switches, 99 combat, quest/prayer unlocks + Ancient Magicks"
             cheat {
                 player.hat = InvObj(MaxGearObjs.torva_helm)
                 player.torso = InvObj(MaxGearObjs.torva_chest)
@@ -118,6 +118,7 @@ class MaxGear @Inject constructor() : PluginScript() {
                     player.statAdvance(stat, maxXp)
                 }
                 player.unlockAllPrayers()
+                player.unlockQuestProgress()
                 player.enableAncientMagicks()
 
                 player.statHeal(stats.hitpoints, constant = 999, percent = 0)
@@ -180,7 +181,7 @@ class MaxGear @Inject constructor() : PluginScript() {
                 player.statBoost(stats.strength, constant = 5, percent = 15)
                 player.statBoost(stats.defence, constant = 5, percent = 15)
 
-                player.mes("Maxed PK: Torva/Fang, switches, all prayer unlocks, Ancient Magicks.")
+                player.mes("Maxed PK: gear, stats, quests, diaries, prayers and Ancient Magicks.")
             }
         }
     }

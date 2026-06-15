@@ -26,6 +26,10 @@ object PvmProgress {
         questsDone[player] = (questsDone[player] ?: 0) + 1
     }
 
+    fun setQuestsDone(player: Player, count: Int) {
+        questsDone[player] = count
+    }
+
     fun bossKills(player: Player): Int = bossKills[player] ?: 0
 
     fun questsDone(player: Player): Int = questsDone[player] ?: 0
