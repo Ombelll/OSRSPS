@@ -10,4 +10,9 @@ object SpecialAttackSpotanims : SpotanimReferences() {
     val fishstabber_silver = find("sp_attackglow_crystal", 8691321)
     val dragon_longsword = find("sp_attack_cleave_spotanim", 13013927)
     val dragon_dagger = find("sp_attack_puncture_spotanim")
+    val armadyl_godsword = find("godwars_godsword_armadyl_spot")
+    val dragon_claws = find("dragon_claws_spot")
+    val dragon_warhammer = find("dragon_warhammer_sa_spotanim")
+    val abyssal_dagger = find("abyssal_dagger_special_spotanim")
+    val toxic_blowpipe = find("toxic_blowpipe_specialattack")
 }

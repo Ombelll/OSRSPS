@@ -14,7 +14,8 @@ W2/PvP heeft nu een eigen uitvoeringsroadmap: [`W2_PVP_ROADMAP.md`](W2_PVP_ROADM
 > player following (engine), Gradle-geheugen 4G, command-trade v1, persistente social commands,
 > Alchemist's Pact, diary reward tiers, Wilderness ditch jump-handler, PvP BIS gear/scroll shops,
 > `::unlockprayers`, `::standard`, `::ancients`, `::lunar`, `::arceuus`, `::unlockquests`,
-> `::pvpops` en `::pkready`. Alles gecommit
+> `::pvpops` en `::pkready`, plus PK-staple special attacks (AGS, claws, gmaul, DWH, fang,
+> abyssal dagger, MSB, toxic blowpipe). Alles gecommit
 > (zie `git log`).
 
 ---

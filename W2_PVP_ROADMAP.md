@@ -14,6 +14,8 @@ poort `43595`, DB `.data/saves/game_w2.db`.
 - Gratis PK-shops bestaan voor melee, ranged, magic, supplies, food en potions.
 - De Edgeville hub heeft een occult altar om Standard, Ancients, Lunar en Arceuus te kiezen.
 - Spellbook commands bestaan: `::standard`, `::ancients`, `::lunar`, `::arceuus`.
+- PK-staple special attacks zijn geregistreerd: AGS, dragon claws, granite maul, dragon warhammer,
+  fang, abyssal dagger, magic shortbow en toxic blowpipe.
 - `::maxgear` unlockt gear, combat stats, prayers, ancient magicks, quest points en quest gates.
 - PK-punten/streaks zijn persistent via varps.
 - Wilderness ditch werkt met jump-anim en springt vanaf huidige X over de ditch.
@@ -47,6 +49,7 @@ Doel: minder voorbereiding, meer vechten.
 - Maak `::tank` loadout voor tank/anti-PK tests.
 - Voeg `::restock` toe: food, karambwans, brews, restores, runes, arrows/bolts.
 - Zorg dat alle loadouts free inventory slots respecteren en geen belangrijke items overschrijven.
+- Check special attack button + energy drain voor AGS, claws, gmaul, DWH, fang, MSB en blowpipe.
 
 Acceptatie:
 - Elke loadout geeft bruikbare worn gear plus switches/supplies.

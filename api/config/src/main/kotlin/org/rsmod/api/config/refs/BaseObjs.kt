@@ -735,6 +735,7 @@ object BaseObjs : ObjReferences() {
 
     val shortbow = find("shortbow")
     val magic_shortbow = find("magic_shortbow")
+    val magic_shortbow_i = find("magic_shortbow_i")
 
     val dark_bow = find("darkbow")
     val dark_bow_green = find("darkbow_green")
@@ -797,6 +798,16 @@ object BaseObjs : ObjReferences() {
     val dragon_dagger_p_plus = find("dragon_dagger_p+")
     val dragon_dagger_p_plus_plus = find("dragon_dagger_p++")
     val dragon_longsword = find("dragon_longsword")
+    val granite_maul = find("granite_maul")
+    val granite_maul_pretty = find("granite_maul_pretty")
+    val granite_maul_plus = find("granite_maul_plus")
+    val granite_maul_pretty_plus = find("granite_maul_pretty_plus")
+    val dragon_warhammer = find("dragon_warhammer")
+    val dragon_warhammer_ornament = find("dragon_warhammer_ornament")
+    val abyssal_dagger = find("abyssal_dagger")
+    val abyssal_dagger_p = find("abyssal_dagger_p")
+    val abyssal_dagger_p_plus = find("abyssal_dagger_p+")
+    val abyssal_dagger_p_plus_plus = find("abyssal_dagger_p++")
     val saradomin_blessed_sword = find("blessed_saradomin_sword")
     val crystal_shield = find("crystal_shield")
 
@@ -897,6 +908,10 @@ object BaseObjs : ObjReferences() {
     val tumekens_shadow = find("tumekens_shadow")
     val twisted_bow = find("twisted_bow")
     val scythe_of_vitur = find("scythe_of_vitur")
+    val toxic_blowpipe = find("toxic_blowpipe")
+    val toxic_blowpipe_loaded = find("toxic_blowpipe_loaded")
+    val toxic_blowpipe_ornament = find("toxic_blowpipe_ornament")
+    val toxic_blowpipe_loaded_ornament = find("toxic_blowpipe_loaded_ornament")
 
     val scorching_bow = find("scorching_bow")
     val blue_moon_spear = find("frostmoon_spear")

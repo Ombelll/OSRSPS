@@ -4,7 +4,9 @@ import org.rsmod.api.specials.SpecialAttackMap
 import org.rsmod.content.other.special.attacks.boost.StatBoostSpecialAttacks
 import org.rsmod.content.other.special.attacks.melee.DragonDaggerSpecialAttack
 import org.rsmod.content.other.special.attacks.melee.DragonLongswordSpecialAttack
+import org.rsmod.content.other.special.attacks.melee.PkMeleeSpecialAttacks
 import org.rsmod.content.other.special.attacks.ranged.DarkBowSpecialAttack
+import org.rsmod.content.other.special.attacks.ranged.PkRangedSpecialAttacks
 import org.rsmod.plugin.module.PluginModule
 
 class SpecialAttackModule : PluginModule() {
@@ -13,5 +15,7 @@ class SpecialAttackModule : PluginModule() {
         addSetBinding<SpecialAttackMap>(DarkBowSpecialAttack::class.java)
         addSetBinding<SpecialAttackMap>(DragonDaggerSpecialAttack::class.java)
         addSetBinding<SpecialAttackMap>(DragonLongswordSpecialAttack::class.java)
+        addSetBinding<SpecialAttackMap>(PkMeleeSpecialAttacks::class.java)
+        addSetBinding<SpecialAttackMap>(PkRangedSpecialAttacks::class.java)
     }
 }

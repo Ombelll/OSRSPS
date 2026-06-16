@@ -23,4 +23,11 @@ object SpecialAttackSeqs : SeqReferences() {
 
     val dragon_longsword = find("cleave", 5532192131862460952)
     val dragon_dagger = find("puncture")
+    val armadyl_godsword = find("armadyl_special_attack")
+    val dragon_claws = find("human_dragon_claws_spec")
+    val granite_maul = find("slayer_granite_maul_special_attack")
+    val dragon_warhammer = find("dragon_warhammer_sa_player")
+    val osmumtens_fang = find("human_osmumtens_fang")
+    val abyssal_dagger = find("abyssal_dagger_special")
+    val toxic_blowpipe = find("toxic_blowpipe_special_updated")
 }
