@@ -3,6 +3,8 @@
 Doel: **elk open punt is uitvoerbaar zonder eigen onderzoek** — exacte paden, kopieerbare code,
 build-stappen en verificatie. Paden relatief aan `C:\Users\Mike\rsmod`. ✅ klaar · ◐ deels · ☐ te doen.
 
+W2/PvP heeft nu een eigen uitvoeringsroadmap: [`W2_PVP_ROADMAP.md`](W2_PVP_ROADMAP.md).
+
 > **Huidige staat (v4, na de grote content-batch):** 2 werelden (W1 GE-hub/PvM 43594, W2
 > PvP/Edgeville 43595, eigen DB's), **178 scripts**. Nieuw sinds v3: NPC-aggressie via custom
 > hunt-mode, Fight Caves-gauntlet op de echte map (area-lifecycle), persistente PK-punten
