@@ -5,6 +5,7 @@ import org.rsmod.api.script.onOpLoc1
 import org.rsmod.api.type.refs.loc.LocReferences
 import org.rsmod.api.type.refs.seq.SeqReferences
 import org.rsmod.game.loc.BoundLocInfo
+import org.rsmod.map.CoordGrid
 import org.rsmod.plugin.scripts.PluginScript
 import org.rsmod.plugin.scripts.ScriptContext
 
@@ -25,12 +26,17 @@ class WildernessDitch : PluginScript() {
 
     private suspend fun ProtectedAccess.jumpDitch(loc: BoundLocInfo) {
         arriveDelay()
-        val zOffset = if (player.coords.z <= loc.coords.z) 1 else -1
-        val dest = loc.coords.translate(0, zOffset)
+        val dest = ditchJumpDestination(loc)
         faceSquare(dest)
         anim(WildernessDitchSeqs.jump)
         delay(1)
         telejump(dest)
         mes("You jump over the Wilderness ditch.")
+    }
+
+    private fun ProtectedAccess.ditchJumpDestination(loc: BoundLocInfo): CoordGrid {
+        val fromSouth = player.coords.z <= loc.coords.z
+        val destZ = if (fromSouth) loc.coords.z + 2 else loc.coords.z - 1
+        return player.coords.copy(z = destZ)
     }
 }
