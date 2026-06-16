@@ -2,8 +2,8 @@ package org.rsmod.content.custom.mikeshop
 
 import org.rsmod.api.config.refs.varbits
 import org.rsmod.api.player.output.mes
-import org.rsmod.api.player.vars.resyncVar
 import org.rsmod.api.player.vars.VarPlayerIntMapSetter
+import org.rsmod.api.player.vars.resyncVar
 import org.rsmod.api.script.onCommand
 import org.rsmod.game.entity.Player
 import org.rsmod.plugin.scripts.PluginScript
@@ -17,14 +17,6 @@ class PrayerUnlocks : PluginScript() {
                 player.unlockAllPrayers()
                 player.enableAncientMagicks()
                 player.mes("All prayer unlocks enabled. Ancient Magicks spellbook activated.")
-            }
-        }
-
-        onCommand("ancients") {
-            desc = "Switch to the Ancient Magicks spellbook"
-            cheat {
-                player.enableAncientMagicks()
-                player.mes("Ancient Magicks spellbook activated.")
             }
         }
     }
@@ -44,9 +36,4 @@ internal fun Player.unlockAllPrayers() {
     resyncVar(varbits.prayer_deadeye_unlocked)
     resyncVar(varbits.prayer_mystic_vigour_unlocked)
     resyncVar(varbits.kr_knightwaves_state)
-}
-
-internal fun Player.enableAncientMagicks() {
-    VarPlayerIntMapSetter.set(this, varbits.spellbook, 1)
-    resyncVar(varbits.spellbook)
 }

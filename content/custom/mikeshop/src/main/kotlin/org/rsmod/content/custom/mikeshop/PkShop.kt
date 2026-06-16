@@ -58,6 +58,7 @@ internal object PkClerkNpcs : NpcReferences() {
 internal object PkLocs : LocReferences() {
     val bankbooth = find("bankbooth")
     val noticeboard = find("noticeboard")
+    val spellbookAltar = find("poh_altar_occult")
 }
 
 internal object PkShopInvs : InvReferences() {
@@ -622,6 +623,7 @@ constructor(
             "Edgeville PvP hub<br>" +
                 "::pkshop opens free gear shops.<br>" +
                 "::pkfood / ::pkpots open food and potion shops.<br>" +
+                "Use the occult altar here to switch spellbooks.<br>" +
                 "::pkpoints shows your kills and points.<br>" +
                 "::pkspend opens the cosmetics shop.<br>" +
                 "Skull prevention is respected; wilderness level ranges apply north of the ditch."
@@ -639,6 +641,7 @@ constructor(
         spawnNpc(PkClerkNpcs.banker, PK_EDGE.translate(-2, 2))
         spawnLoc(PkLocs.bankbooth, PK_EDGE.translate(-3, 2), LocAngle.East)
         spawnLoc(PkLocs.noticeboard, PK_EDGE.translate(-1, 2), LocAngle.South)
+        spawnLoc(PkLocs.spellbookAltar, PK_EDGE.translate(-4, 2), LocAngle.South)
     }
 
     private fun spawnNpc(ref: NpcType, coords: CoordGrid) {

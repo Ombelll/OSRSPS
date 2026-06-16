@@ -12,6 +12,8 @@ poort `43595`, DB `.data/saves/game_w2.db`.
 - `::pvpops` refresht player-ops als `Attack` niet zichtbaar is.
 - `::pkready` zet je op de Edgeville PK hub en refresht player-ops.
 - Gratis PK-shops bestaan voor melee, ranged, magic, supplies, food en potions.
+- De Edgeville hub heeft een occult altar om Standard, Ancients, Lunar en Arceuus te kiezen.
+- Spellbook commands bestaan: `::standard`, `::ancients`, `::lunar`, `::arceuus`.
 - `::maxgear` unlockt gear, combat stats, prayers, ancient magicks, quest points en quest gates.
 - PK-punten/streaks zijn persistent via varps.
 - Wilderness ditch werkt met jump-anim en springt vanaf huidige X over de ditch.
@@ -24,6 +26,7 @@ Doel: twee clients kunnen zonder gedoe op W2 vechten.
 - Check `Attack` zichtbaar na normale login op W2.
 - Check `::pvpops` herstelt `Attack` zonder relog.
 - Check `::pkready` teleporteert naar Edgeville en zet `Attack`.
+- Check altar in Edgeville alle vier spellbooks activeert.
 - Check PvP buiten wilderness blijft open test-PvP op W2.
 - Check binnen wilderness: beide spelers moeten in wilderness staan en binnen combat-range vallen.
 - Check skull prevention: met skull prevention aan moet onveilige attack geblokkeerd worden.
@@ -127,8 +130,8 @@ Acceptatie:
 - W2 poort: `43595`
 - W2 target: `RSMod PvP (World 2)`
 - Gear: `::maxgear`
+- Spellbooks: `::standard`, `::ancients`, `::lunar`, `::arceuus`
 - PvP option fix: `::pvpops`
 - Hub ready: `::pkready`
 - Shops: `::pkshop`, `::pkmelee`, `::pkranged`, `::pkmagic`, `::pksupplies`, `::pkfood`, `::pkpots`
 - Progress: `::pkpoints`, `::pkspend`
-
