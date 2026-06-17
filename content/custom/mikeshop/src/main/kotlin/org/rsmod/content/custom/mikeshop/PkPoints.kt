@@ -40,7 +40,7 @@ constructor(
                 val name = player.displayName
                 player.mes("--- PK stats for $name ---")
                 player.mes("Kills: ${player.pkKills}")
-                player.mes("Killstreak: ${tracker.streak(name)}")
+                player.mes("Killstreak: ${tracker.streak(name)} (best this session: ${tracker.bestStreak(name)})")
                 player.mes("PK points: ${player.pkPoints} (spend with ::pkspend)")
             }
         }

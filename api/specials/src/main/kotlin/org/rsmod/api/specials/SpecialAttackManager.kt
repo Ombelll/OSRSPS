@@ -28,6 +28,16 @@ constructor(
     private val weapons: SpecialAttackWeapons,
     private val manager: PlayerAttackManager,
 ) {
+    // CUSTOM (Mike's server): admin ::maxhit -> de eerstvolgende special van deze speler doet max hit.
+    private val maxHitArmed = HashSet<Int>()
+
+    /** Wapen de speler zo dat zijn eerstvolgende special-attack max hit doet (eenmalig). */
+    public fun armMaxHit(player: Player) {
+        maxHitArmed.add(player.slotId)
+    }
+
+    private fun consumeMaxHit(player: Player): Boolean = maxHitArmed.remove(player.slotId)
+
     public fun hasSpecialEnergy(source: ProtectedAccess, energyInHundreds: Int): Boolean {
         return energy.hasSpecialEnergy(source.player, energyInHundreds)
     }
@@ -117,16 +127,20 @@ constructor(
         attackStyle: MeleeAttackStyle? = attack.style,
         blockType: MeleeAttackType? = attack.type,
     ): Int =
-        manager.rollMeleeDamage(
-            source = source.player,
-            target = target,
-            attack = attack,
-            accuracyMultiplier = accuracyMultiplier,
-            maxHitMultiplier = maxHitMultiplier,
-            attackType = attackType,
-            attackStyle = attackStyle,
-            blockType = blockType,
-        )
+        if (consumeMaxHit(source.player)) {
+            calculateMeleeMaxHit(source, target, attackType, attackStyle, maxHitMultiplier)
+        } else {
+            manager.rollMeleeDamage(
+                source = source.player,
+                target = target,
+                attack = attack,
+                accuracyMultiplier = accuracyMultiplier,
+                maxHitMultiplier = maxHitMultiplier,
+                attackType = attackType,
+                attackStyle = attackStyle,
+                blockType = blockType,
+            )
+        }
 
     /** @see [PlayerAttackManager.rollMeleeAccuracy] */
     public fun rollMeleeAccuracy(
@@ -185,17 +199,21 @@ constructor(
         blockType: RangedAttackType? = attack.type,
         boltSpecDamage: Int = 0,
     ): Int =
-        manager.rollRangedDamage(
-            source = source.player,
-            target = target,
-            attack = attack,
-            accuracyMultiplier = accuracyMultiplier,
-            maxHitMultiplier = maxHitMultiplier,
-            attackType = attackType,
-            attackStyle = attackStyle,
-            blockType = blockType,
-            boltSpecDamage = boltSpecDamage,
-        )
+        if (consumeMaxHit(source.player)) {
+            calculateRangedMaxHit(source, target, attackType, attackStyle, maxHitMultiplier, boltSpecDamage)
+        } else {
+            manager.rollRangedDamage(
+                source = source.player,
+                target = target,
+                attack = attack,
+                accuracyMultiplier = accuracyMultiplier,
+                maxHitMultiplier = maxHitMultiplier,
+                attackType = attackType,
+                attackStyle = attackStyle,
+                blockType = blockType,
+                boltSpecDamage = boltSpecDamage,
+            )
+        }
 
     /** @see [PlayerAttackManager.rollRangedAccuracy] */
     public fun rollRangedAccuracy(

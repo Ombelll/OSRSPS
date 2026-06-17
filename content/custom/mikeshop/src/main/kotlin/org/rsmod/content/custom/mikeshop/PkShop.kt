@@ -35,14 +35,21 @@ import org.rsmod.game.type.npc.NpcTypeList
 import org.rsmod.map.CoordGrid
 import org.rsmod.plugin.scripts.PluginScript
 import org.rsmod.plugin.scripts.ScriptContext
+import org.rsmod.routefinder.collision.CollisionFlagMap
+import org.rsmod.routefinder.flag.CollisionFlag
 import org.rsmod.routefinder.loc.LocLayerConstants
 
 /** Edgeville-coordinaat van de PvP-world (zelfde als de spawn). */
 private val PK_EDGE: CoordGrid = CoordGrid(0, 48, 54, 15, 40)
 
+/** Anker voor de winkel-hub: door Mike gekozen open plek (x=3087, z=3490). Alles bouwt hiervandaan naar het noorden. */
+private val PK_HUB: CoordGrid = CoordGrid(0, 48, 54, 15, 34)
+
 /** Zorgt dat de Edgeville PK-NPC's maar een keer worden gespawnd. */
 internal object PkShopState {
     var built = false
+    /** Werkelijke (mogelijk verschoven) eindcoord van het prikbord, voor de lees-check. */
+    var noticeboardCoord: CoordGrid? = null
 }
 
 internal object PkClerkNpcs : NpcReferences() {
@@ -520,6 +527,7 @@ constructor(
     private val locTypes: LocTypeList,
     private val npcRepo: NpcRepository,
     private val npcTypes: NpcTypeList,
+    private val collision: CollisionFlagMap,
 ) : PluginScript() {
     // Alleen de PvP-world (RSMOD_WORLD=2) krijgt de Edgeville PK-NPC's.
     private val pvpWorld = System.getenv("RSMOD_WORLD") == "2"
@@ -531,6 +539,10 @@ constructor(
                 PkShopState.built = true
                 spawnEdgevilleShops()
             }
+        }
+        // Read-only tegel-validatie meteen bij startup loggen (indien de map al geladen is).
+        if (pvpWorld) {
+            dryRunHubReport()
         }
         // Praat met een PK-shopkeeper -> meteen de bijbehorende gratis winkel.
         onOpNpc1(PkClerkNpcs.melee) { openFree(player, "Free PK Melee Shop", PkShopInvs.melee) }
@@ -616,7 +628,7 @@ constructor(
     }
 
     private suspend fun ProtectedAccess.readEdgevilleNoticeboard(coords: CoordGrid) {
-        if (coords != PK_EDGE.translate(-1, 2)) {
+        if (coords != PkShopState.noticeboardCoord) {
             return
         }
         mesbox(
@@ -630,18 +642,130 @@ constructor(
         )
     }
 
-    /** Spawnt de PK-shopkeeper + een banker in Edgeville (PvP-world). NPC-spawns try/catch. */
+    // Tegels die als 'bezet/geblokkeerd' tellen voor plaatsing: niet-beloopbaar of een loc erop.
+    private val blockedMask = CollisionFlag.BLOCK_WALK or CollisionFlag.LOC
+
+    /**
+     * Bouwt de complete PK-hub rond PK_HUB (3087,3490), noordwaarts. Elke spawn wordt eerst
+     * gevalideerd: alleen op een geladen, beloopbare, object-vrije en niet-reeds-gebruikte tegel.
+     * Geblokkeerde plekken worden automatisch verschoven naar de dichtstbijzijnde vrije tegel.
+     * Elke beslissing wordt gelogd ([PK-HUB] object -> coord -> vrij JA/NEE).
+     */
     private fun spawnEdgevilleShops() {
-        spawnNpc(PkClerkNpcs.melee, PK_EDGE.translate(1, 2))
-        spawnNpc(PkClerkNpcs.ranged, PK_EDGE.translate(2, 2))
-        spawnNpc(PkClerkNpcs.magic, PK_EDGE.translate(3, 2))
-        spawnNpc(PkClerkNpcs.supply, PK_EDGE.translate(4, 2))
-        spawnNpc(PkClerkNpcs.food, PK_EDGE.translate(5, 2))
-        spawnNpc(PkClerkNpcs.potions, PK_EDGE.translate(6, 2))
-        spawnNpc(PkClerkNpcs.banker, PK_EDGE.translate(-2, 2))
-        spawnLoc(PkLocs.bankbooth, PK_EDGE.translate(-3, 2), LocAngle.East)
-        spawnLoc(PkLocs.noticeboard, PK_EDGE.translate(-1, 2), LocAngle.South)
-        spawnLoc(PkLocs.spellbookAltar, PK_EDGE.translate(-4, 2), LocAngle.South)
+        println("[PK-HUB] === Plaatsing PK-hub rond ${PK_HUB.x},${PK_HUB.z} (noordwaarts) met tegel-validatie ===")
+        val used = HashSet<CoordGrid>()
+        // Twee rijen van 3 winkeliers (de bestaande gratis PK-shops).
+        placeNpc("shop:gear/melee", PkClerkNpcs.melee, PK_HUB.translate(-1, 2), used)
+        placeNpc("shop:food", PkClerkNpcs.food, PK_HUB.translate(0, 2), used)
+        placeNpc("shop:potions", PkClerkNpcs.potions, PK_HUB.translate(1, 2), used)
+        placeNpc("shop:runes/magic", PkClerkNpcs.magic, PK_HUB.translate(-1, 3), used)
+        placeNpc("shop:ammo/ranged", PkClerkNpcs.ranged, PK_HUB.translate(0, 3), used)
+        placeNpc("shop:supplies", PkClerkNpcs.supply, PK_HUB.translate(1, 3), used)
+        // Bank: banker + 2 booths achter de winkelrijen (noordkant).
+        placeNpc("banker", PkClerkNpcs.banker, PK_HUB.translate(0, 5), used)
+        placeLoc("bank booth (west)", PkLocs.bankbooth, PK_HUB.translate(-1, 5), LocAngle.South, used)
+        placeLoc("bank booth (oost)", PkLocs.bankbooth, PK_HUB.translate(1, 5), LocAngle.South, used)
+        // Prikbord op de LINKER-flank (west), spellbook-altaar op de RECHTER-flank (oost).
+        PkShopState.noticeboardCoord =
+            placeLoc("noticeboard (links)", PkLocs.noticeboard, PK_HUB.translate(-3, 2), LocAngle.East, used)
+        placeLoc("spellbook altar (rechts)", PkLocs.spellbookAltar, PK_HUB.translate(3, 2), LocAngle.West, used)
+        println("[PK-HUB] === Plaatsing voltooid ===")
+    }
+
+    /** Geladen, beloopbaar, object-vrij en nog niet door ons bezet. */
+    private fun tileFree(c: CoordGrid, used: Set<CoordGrid>): Boolean {
+        if (c in used) return false
+        if (!collision.isZoneAllocated(c.x, c.z, c.level)) return false
+        return (collision[c.x, c.z, c.level] and blockedMask) == 0
+    }
+
+    /** Gewenste tegel als die vrij is, anders de dichtstbijzijnde vrije tegel (ringen radius 1..4). */
+    private fun resolveTile(preferred: CoordGrid, used: Set<CoordGrid>): CoordGrid? {
+        if (tileFree(preferred, used)) return preferred
+        for (r in 1..4) {
+            for (dz in -r..r) {
+                for (dx in -r..r) {
+                    if (maxOf(kotlin.math.abs(dx), kotlin.math.abs(dz)) != r) continue
+                    val c = preferred.translate(dx, dz)
+                    if (tileFree(c, used)) return c
+                }
+            }
+        }
+        return null
+    }
+
+    private fun placeNpc(
+        label: String,
+        ref: NpcType,
+        preferred: CoordGrid,
+        used: MutableSet<CoordGrid>,
+    ) {
+        val coord = resolveTile(preferred, used)
+        if (coord == null) {
+            println("[PK-HUB] $label -> ${preferred.x},${preferred.z} -> vrij NEE -> geen vrije tegel, OVERGESLAGEN")
+            return
+        }
+        report(label, preferred, coord)
+        used += coord
+        spawnNpc(ref, coord)
+    }
+
+    private fun placeLoc(
+        label: String,
+        ref: LocType,
+        preferred: CoordGrid,
+        angle: LocAngle,
+        used: MutableSet<CoordGrid>,
+    ): CoordGrid? {
+        val coord = resolveTile(preferred, used)
+        if (coord == null) {
+            println("[PK-HUB] $label -> ${preferred.x},${preferred.z} -> vrij NEE -> geen vrije tegel, OVERGESLAGEN")
+            return null
+        }
+        report(label, preferred, coord)
+        used += coord
+        spawnLoc(ref, coord, angle)
+        return coord
+    }
+
+    private fun report(label: String, preferred: CoordGrid, coord: CoordGrid) {
+        val moved = if (coord != preferred) " (VERSCHOVEN van ${preferred.x},${preferred.z})" else ""
+        println("[PK-HUB] $label -> ${coord.x},${coord.z},l${coord.level} -> vrij JA$moved")
+    }
+
+    /** Read-only tegel-validatie bij startup (zonder spawnen), zodat het rapport direct in het log staat. */
+    private fun dryRunHubReport() {
+        if (!collision.isZoneAllocated(PK_HUB.x, PK_HUB.z, PK_HUB.level)) {
+            println("[PK-HUB-DRYRUN] Collision-map nog niet geladen bij startup; rapport verschijnt bij de eerste login.")
+            return
+        }
+        println("[PK-HUB-DRYRUN] === Tegel-validatie (read-only) rond ${PK_HUB.x},${PK_HUB.z} ===")
+        val used = HashSet<CoordGrid>()
+        val plan =
+            listOf(
+                "shop:gear/melee" to PK_HUB.translate(-1, 2),
+                "shop:food" to PK_HUB.translate(0, 2),
+                "shop:potions" to PK_HUB.translate(1, 2),
+                "shop:runes/magic" to PK_HUB.translate(-1, 3),
+                "shop:ammo/ranged" to PK_HUB.translate(0, 3),
+                "shop:supplies" to PK_HUB.translate(1, 3),
+                "banker" to PK_HUB.translate(0, 5),
+                "bank booth (west)" to PK_HUB.translate(-1, 5),
+                "bank booth (oost)" to PK_HUB.translate(1, 5),
+                "noticeboard (links)" to PK_HUB.translate(-3, 2),
+                "spellbook altar (rechts)" to PK_HUB.translate(3, 2),
+            )
+        for ((label, pref) in plan) {
+            val c = resolveTile(pref, used)
+            if (c == null) {
+                println("[PK-HUB-DRYRUN] $label -> ${pref.x},${pref.z} -> vrij NEE -> geen vrije tegel")
+            } else {
+                used += c
+                val moved = if (c != pref) " (VERSCHOVEN van ${pref.x},${pref.z})" else ""
+                println("[PK-HUB-DRYRUN] $label -> ${c.x},${c.z},l${c.level} -> vrij JA$moved")
+            }
+        }
+        println("[PK-HUB-DRYRUN] === einde ===")
     }
 
     private fun spawnNpc(ref: NpcType, coords: CoordGrid) {

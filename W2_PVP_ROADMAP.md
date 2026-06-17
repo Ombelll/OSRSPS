@@ -19,7 +19,17 @@ poort `43595`, DB `.data/saves/game_w2.db`.
 - `::maxgear` unlockt gear, combat stats, prayers, ancient magicks, quest points en quest gates.
 - PK-punten/streaks zijn persistent via varps.
 - Wilderness ditch werkt met jump-anim en springt vanaf huidige X over de ditch.
-- Kill loot v1: slachtoffer houdt top 3 waardevolle stacks, rest dropt owner-locked voor killer.
+- Kill loot v2: untradeables blijven altijd bij het slachtoffer; van de tradeables houdt het
+  slachtoffer de top 3 (top 4 met Protect Item-prayer), rest dropt owner-locked voor de killer.
+- Oneindige special attack (energie blijft 100%) - server-breed.
+- Food/pots werken voor alle PK-supplies (shark/anglerfish/karambwan/monkfish/dark crab +
+  super combat/divine/bastion/prayer/super restore/Saradomin brew met dosis-afname).
+- Teleport-spells werkend op alle 4 spellbooks (21 teleports, alleen geladen regio's gewired,
+  zone-gevalideerd). Home Teleport gaat op elke book naar Edgeville.
+- PK-loadouts: `::brid`, `::veng`, `::pure`, `::tank` + `::restock` (Fase 2).
+- Tele-block: `::teleblock`/`::tb <naam>` blokkeert teleport-spells van het doelwit (Fase 3).
+- Autosave: elke ~60s wordt elke online speler volledig opgeslagen (geen verlies bij herstart/crash).
+- Anti-farm + best-streak + milestone-bonus in PK-punten (Fase 4).
 
 ## Fase 1 - Directe PvP Betrouwbaarheid
 
@@ -39,51 +49,67 @@ Acceptatie:
 - Geen server error in `world2.err.log`.
 - Na kill stijgt killer `::pkpoints`.
 
-## Fase 2 - PK Gear Flow
+## Fase 2 - PK Gear Flow  [GEIMPLEMENTEERD - live 2-client test nog te doen]
 
 Doel: minder voorbereiding, meer vechten.
 
-- Maak een compact `::brid` loadout voor hybride NH/tribrid.
-- Maak `::veng` loadout voor melee/range veng PK.
-- Maak `::pure` loadout voor lage defence tests.
-- Maak `::tank` loadout voor tank/anti-PK tests.
-- Voeg `::restock` toe: food, karambwans, brews, restores, runes, arrows/bolts.
-- Zorg dat alle loadouts free inventory slots respecteren en geen belangrijke items overschrijven.
-- Check special attack button + energy drain voor AGS, claws, gmaul, DWH, fang, MSB en blowpipe.
+- [x] `::brid` loadout voor hybride NH/tribrid (mage worn + range/melee switches + supplies).
+- [x] `::veng` loadout voor melee/range veng PK (tip: ga op Lunar via `::lunar`).
+- [x] `::pure` loadout voor lage defence tests (vereenvoudigd; dedicated pure-gear volgt).
+- [x] `::tank` loadout voor tank/anti-PK tests (Dharok + DFS + brews).
+- [x] `::restock`: food, karambwans, brews, restores, runes, arrows.
+- [x] Loadouts respecteren vrije slots (invAdd strict=false; worn gear wordt vervangen).
+- [ ] Special attack button + energy drain checken (NB: spec-energie is nu oneindig op deze server).
 
 Acceptatie:
-- Elke loadout geeft bruikbare worn gear plus switches/supplies.
-- `::restock` werkt tijdens meerdere fights zonder lege inventory-problemen.
+- [x] Elke loadout geeft bruikbare worn gear plus switches/supplies (geimplementeerd).
+- [ ] `::restock` over meerdere fights live verifieren (2-client test).
 
-## Fase 3 - Wilderness Rules v2
+## Fase 3 - Wilderness Rules v2  [KLAAR]
 
 Doel: wilderness voelt herkenbaar en minder exploitable.
 
-- Protect item meenemen in item-retention.
-- Untradeables apart behandelen: broken/drop-convert/keep-regels kiezen.
-- Speciale PK items waarde geven zodat top-3 retentie klopt.
-- Teleblock toevoegen of minimaal voorbereiden als spell/effect.
-- PJ-timer/singles-plus basis toevoegen.
-- Multiway zones controleren en documenteren.
-- Ditch testcases toevoegen voor noord/zuid, lange locs en spam-click.
+- [x] Protect item in item-retention (Protect Item-prayer aan -> 1 extra item behouden, top-4).
+- [x] Untradeables apart: blijven ALTIJD bij het slachtoffer (worden nooit gedropt/verloren).
+- [x] PK-item-waarde: retentie sorteert op playerCost/playerCostDerived/cost (waardevolste eerst).
+- [x] Teleblock: `::teleblock <naam>` / `::tb <naam>` blokkeert de teleport-SPELLS van het doelwit
+      5 min (zie WildernessRules.kt / TeleBlockState + check in MagicSpells.kt). Utility-commands
+      (::edge/::ge/::pkready) blijven bewust werken voor testgemak.
+- [x] PJ-timer / singles-plus: al door de engine afgehandeld in `PvPCombatScript.canAttack` via
+      `pkPredator1`-tracking + single-combat-checks ("X is fighting another player" / "I'm already
+      under attack"). Geldt alleen in singles (`mapMultiway()` bepaalt single vs multi).
+- [x] Multiway zones: gedetecteerd via `mapMultiway()` (engine, uit de map-data). In multi gelden de
+      singles-PJ-checks niet, in singles wel. Edgeville-hub = singles; diepe wild = multi waar de
+      map dat aangeeft.
+- [x] Ditch testcases gedocumenteerd (zie hieronder; engine springt vanaf huidige X over de ditch).
 
 Acceptatie:
-- Loot na death is voorspelbaar.
-- Speler kan geen obvious dupe/item-loss veroorzaken door logout, death of full inventory.
+- [x] Loot na death is voorspelbaar (untradeables veilig, vaste top-3/4 op waarde).
+- [x] Geen item-loss: untradeables nooit kwijt; bij volle inventory droppen kept-items owner-locked
+      voor de speler zelf (niet voor de killer). Logout mid-death is atomair (protected access).
 
-## Fase 4 - Rewards En Economy
+### Ditch-testcases (handmatig na te lopen)
+1. Noord-overgang: sta net ten zuiden van de ditch, klik over -> jump-anim, land 1 tegel noord, in wild.
+2. Zuid-overgang: sta in wild net ten noorden, klik zuid over de ditch -> land net buiten wild.
+3. Lange loc/afstand: klik de ditch van enkele tegels afstand -> loopt eerst naar de ditch, dan jump.
+4. Spam-click: meerdere keren snel klikken -> geen dubbele jump / geen vastlopen.
+
+## Fase 4 - Rewards En Economy  [GROTENDEELS KLAAR - web-hiscores TODO]
 
 Doel: kills geven motivatie zonder economie kapot te maken.
 
-- `::pkpoints` duidelijker maken: punten, kills, streak, beste streak.
-- PK shop uitbreiden met cosmetics, supplies en risk-items.
-- Streak rewards toevoegen met zachte caps.
-- Anti-farm regels: zelfde IP/account-pair cooldown of diminishing returns.
-- Hiscores W2-tab uitbreiden met kills, deaths, KD, streak en points.
+- [x] `::pkpoints` duidelijker: kills, punten, huidige streak + beste streak (deze sessie).
+- [x] PK shop met cosmetics/supplies/risk-items (`::pkspend`: coins, super combat, dragon claws,
+      santa/robin/halloween/black-phat cosmetics).
+- [x] Streak rewards met zachte caps: basis 4 + (streak-1) punten (cap 10/kill) + milestone-bonus
+      (+streak elke 5e kill); broadcast bij streak 5/10/15...
+- [x] Anti-farm: dezelfde tegenstander snel herhaald killen geeft diminishing returns (vol -> half
+      -> 1 punt); de teller dooft na 2 min zonder kill op dat doelwit. Melding "(verlaagd - anti-farm)".
+- [ ] Web-hiscores W2-tab (kills/deaths/KD/streak/points) - vereist web-werk, apart traject.
 
 Acceptatie:
-- Punten voelen nuttig maar gratis shops blijven bruikbaar voor testen.
-- 2-account farmen levert beperkt voordeel op.
+- [x] Punten voelen nuttig maar gratis shops blijven bruikbaar voor testen.
+- [x] 2-account farmen levert beperkt voordeel op (diminishing returns).
 
 ## Fase 5 - PvP UX En Hub
 
@@ -133,8 +159,11 @@ Acceptatie:
 - W2 poort: `43595`
 - W2 target: `RSMod PvP (World 2)`
 - Gear: `::maxgear`
+- Loadouts (Fase 2): `::brid`, `::veng`, `::pure`, `::tank`, `::restock`
 - Spellbooks: `::standard`, `::ancients`, `::lunar`, `::arceuus`
+- Teleports: alle spellbook-teleports werken (klik de spell); Home Teleport -> Edgeville
 - PvP option fix: `::pvpops`
 - Hub ready: `::pkready`
 - Shops: `::pkshop`, `::pkmelee`, `::pkranged`, `::pkmagic`, `::pksupplies`, `::pkfood`, `::pkpots`
 - Progress: `::pkpoints`, `::pkspend`
+- Tele-block: `::teleblock <naam>` of `::tb <naam>`

@@ -47,3 +47,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+# Lokale logs en vrienden-setup (bevat publiek tunneladres - niet publiceren)
+.codex-logs/
+friend-package/

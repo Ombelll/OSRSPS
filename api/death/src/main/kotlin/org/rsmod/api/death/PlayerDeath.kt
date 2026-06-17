@@ -8,11 +8,13 @@ import org.rsmod.api.config.refs.jingles
 import org.rsmod.api.config.refs.midis
 import org.rsmod.api.config.refs.queues
 import org.rsmod.api.config.refs.seqs
+import org.rsmod.api.config.refs.varbits
 import org.rsmod.api.config.refs.varps
 import org.rsmod.api.player.deathResetTimers
 import org.rsmod.api.player.disablePrayers
 import org.rsmod.api.player.output.mes
 import org.rsmod.api.player.protect.ProtectedAccess
+import org.rsmod.api.player.vars.boolVarBit
 import org.rsmod.api.player.vars.intVarp
 import org.rsmod.api.realm.Realm
 import org.rsmod.api.repo.obj.ObjRepository
@@ -38,6 +40,7 @@ constructor(
     private var Player.specialAttackType by intVarp(varps.sa_attack)
     private var Player.pkPoints by intVarp(varps.mike_pk_points)
     private var Player.pkKills by intVarp(varps.mike_pk_kills)
+    private val Player.protectItemActive by boolVarBit(varbits.protect_item)
 
     // PK-punten/killstreaks gelden alleen op de PvP-wereld (RSMOD_WORLD=2).
     private val pvpWorld = System.getenv("RSMOD_WORLD") == "2"
@@ -92,12 +95,15 @@ constructor(
             return null
         }
         val victimStreakLost = pvpKills.endStreak(victim.displayName)
-        val result = pvpKills.recordKill(killer.displayName, killer.pkKills, killer.pkPoints)
+        val result =
+            pvpKills.recordKill(killer.displayName, victim.displayName, killer.pkKills, killer.pkPoints)
         killer.pkKills = result.kills
         killer.pkPoints = result.points
+        val farmNote = if (result.farmed) " (verlaagd - anti-farm)" else ""
+        killer.mes("You killed ${victim.displayName}! +${result.gained} PK points$farmNote.")
         killer.mes(
-            "You killed ${victim.displayName}! Streak: ${result.streak}. " +
-                "PK points: ${result.points} (::pkspend to spend them)."
+            "Streak: ${result.streak} (best: ${result.bestStreak}). " +
+                "Total: ${result.points} PK points (::pkspend)."
         )
         victim.mes(
             "You were killed by ${killer.displayName}." +
@@ -120,16 +126,24 @@ constructor(
         if (items.isEmpty()) {
             return
         }
-        val kept =
-            items
+        // Wilderness Rules v2 (Fase 3):
+        //  - Untradeables blijven ALTIJD bij het slachtoffer (geen item-loss, voorspelbaar).
+        //  - Van de tradeables behoud je de 3 waardevolste (4 met Protect Item-prayer aan).
+        //  - De rest dropt owner-locked voor de killer.
+        val untradeables = items.filter { !objTypes[it.obj].tradeable }
+        val tradeables = items.filter { objTypes[it.obj].tradeable }
+        val keepCount = if (player.protectItemActive) 4 else 3
+        val keptTradeables =
+            tradeables
                 .sortedWith(
                     compareByDescending<DeathItem> { deathValue(it.obj) }
                         .thenBy { if (it.worn) 0 else 1 }
                         .thenBy { it.slot }
                 )
-                .take(3)
+                .take(keepCount)
                 .toSet()
-        val dropped = items.filter { it !in kept }
+        val kept = untradeables.toSet() + keptTradeables
+        val dropped = tradeables.filter { it !in keptTradeables }
 
         clearDeathItems(items)
         restoreKeptItems(kept, deathCoords)
@@ -138,8 +152,12 @@ constructor(
         for (entry in dropped) {
             objRepo.add(entry.obj, deathCoords, duration, killer)
         }
+        val extras = buildString {
+            if (untradeables.isNotEmpty()) append(" (incl. ${untradeables.size} untradeable behouden)")
+            if (player.protectItemActive) append(" [Protect Item: +1]")
+        }
         mes(
-            "You kept ${kept.size} item(s). " +
+            "You kept ${kept.size} item(s)$extras. " +
                 "${dropped.size} item stack(s) dropped for ${killer.displayName}."
         )
         if (dropped.isNotEmpty()) {

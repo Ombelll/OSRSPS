@@ -7,15 +7,14 @@ import org.rsmod.game.entity.Player
 public class SpecialAttackEnergy {
     private var Player.specialEnergy by intVarp(varps.sa_energy)
 
+    // CUSTOM (Mike's server): oneindige special attack. Er is altijd genoeg energie en
+    // het gebruiken van een spec vult de balk meteen weer naar 100% i.p.v. te draineren.
     public fun hasSpecialEnergy(player: Player, energyInHundreds: Int): Boolean {
-        return player.specialEnergy >= energyInHundreds
+        return true
     }
 
     public fun takeSpecialEnergy(player: Player, energyInHundreds: Int) {
-        require(player.specialEnergy >= energyInHundreds) {
-            "Not enough special energy to take. Use `hasSpecialEnergy` first for validation."
-        }
-        player.specialEnergy -= energyInHundreds
+        player.specialEnergy = MAX_ENERGY
     }
 
     public fun isSpecializedRequirement(energyInHundreds: Int): Boolean {

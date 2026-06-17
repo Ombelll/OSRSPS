@@ -15,4 +15,8 @@ dependencies {
     implementation(projects.api.repo)
     implementation(projects.api.death)
     implementation(projects.content.interfaces.bank)
+    implementation(projects.engine.routefinder)
+    implementation(projects.api.spells)
+    implementation(projects.api.specials)
+    implementation(projects.api.account)
 }
