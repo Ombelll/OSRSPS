@@ -15,6 +15,8 @@ import org.rsmod.api.spells.attack.SpellAttack
 import org.rsmod.api.spells.attack.SpellAttackManager
 import org.rsmod.api.spells.attack.SpellAttackMap
 import org.rsmod.api.spells.attack.SpellAttackRepository
+import org.rsmod.api.type.refs.spot.SpotanimReferences
+import org.rsmod.api.type.refs.synth.SynthReferences
 import org.rsmod.game.entity.Npc
 import org.rsmod.game.entity.PathingEntity
 import org.rsmod.game.entity.Player
@@ -31,6 +33,65 @@ class ElementalSpells @Inject constructor(private val objTypes: ObjTypeList) : S
         registerBlasts(manager)
         registerWaves(manager)
         registerSurges(manager)
+        registerAncients(manager)
+    }
+
+    /**
+     * Alle ancient combat-spells (Rush/Burst/Blitz/Barrage in Smoke/Shadow/Blood/Ice). Hergebruikt
+     * [ElementalSpellAttack] met een vaste max hit per tier. Zonder deze registratie geeft casten
+     * "nothing happens" (de spells stonden wel in de spellbook, maar er was geen SpellAttack). Ice'
+     * freeze zit los in PvPCombatScript. Spotanims/sounds komen uit de cache via [AncientSpotanims]/
+     * [AncientSynths]; bursts/barrages zonder eigen "travel"-projectiel gebruiken hun impact-graphic.
+     */
+    private fun SpellAttackRepository.registerAncients(manager: SpellAttackManager) {
+        val s = AncientSpotanims
+        val sy = AncientSynths
+
+        fun ancient(
+            spell: org.rsmod.game.type.obj.ObjType,
+            travel: SpotanimType,
+            impact: SpotanimType,
+            sound: SynthType,
+            maxHit: Int,
+        ) {
+            register(
+                spell = spell,
+                attack =
+                    ElementalSpellAttack(
+                        manager = manager,
+                        objTypes = objTypes,
+                        staffAnim = seqs.human_caststrike_staff,
+                        unarmedAnim = seqs.human_caststrike,
+                        launch = travel,
+                        travel = travel,
+                        impact = impact,
+                        castSound = sound,
+                        hitSound = sound,
+                        getMaxHit = { maxHit },
+                    ),
+            )
+        }
+
+        // Ice (rush/burst/blitz/barrage) - bevriest ook (zie PvPCombatScript).
+        ancient(objs.spell_ice_rush, s.ice_rush_travel, s.ice_rush_impact, sy.ice_rush, 16)
+        ancient(objs.spell_ice_burst, s.ice_burst_travel, s.ice_burst_impact, sy.ice_burst, 22)
+        ancient(objs.spell_ice_blitz, s.ice_blitz_travel, s.ice_blitz_impact, sy.ice_blitz, 26)
+        ancient(objs.spell_ice_barrage, s.ice_barrage_travel, s.ice_barrage_impact, sy.ice_barrage, 30)
+        // Blood (heal-effect nog niet gewired).
+        ancient(objs.spell_blood_rush, s.blood_rush_travel, s.blood_rush_impact, sy.blood_rush, 15)
+        ancient(objs.spell_blood_burst, s.blood_burst_impact, s.blood_burst_impact, sy.blood_burst, 21)
+        ancient(objs.spell_blood_blitz, s.blood_blitz_travel, s.blood_blitz_impact, sy.blood_blitz, 25)
+        ancient(objs.spell_blood_barrage, s.blood_barrage_impact, s.blood_barrage_impact, sy.blood_barrage, 29)
+        // Smoke (poison-effect nog niet gewired).
+        ancient(objs.spell_smoke_rush, s.smoke_rush_travel, s.smoke_rush_impact, sy.smoke_rush, 14)
+        ancient(objs.spell_smoke_burst, s.smoke_burst_travel, s.smoke_burst_impact, sy.smoke_burst, 20)
+        ancient(objs.spell_smoke_blitz, s.smoke_blitz_travel, s.smoke_blitz_impact, sy.smoke_blitz, 24)
+        ancient(objs.spell_smoke_barrage, s.smoke_barrage_travel, s.smoke_barrage_impact, sy.smoke_barrage, 27)
+        // Shadow (att-reduce-effect nog niet gewired).
+        ancient(objs.spell_shadow_rush, s.shadow_rush_travel, s.shadow_rush_impact, sy.shadow_rush, 14)
+        ancient(objs.spell_shadow_burst, s.shadow_burst_impact, s.shadow_burst_impact, sy.shadow_burst, 19)
+        ancient(objs.spell_shadow_blitz, s.shadow_blitz_travel, s.shadow_blitz_impact, sy.shadow_blitz, 24)
+        ancient(objs.spell_shadow_barrage, s.shadow_barrage_impact, s.shadow_barrage_impact, sy.shadow_barrage, 28)
     }
 
     private fun SpellAttackRepository.registerStrikes(manager: SpellAttackManager) {
@@ -490,4 +551,56 @@ class ElementalSpells @Inject constructor(private val objTypes: ObjTypeList) : S
                 unarmedAnim
             }
     }
+}
+
+/** Ancient spell spotanims uit de cache (sommige bursts/barrages hebben geen eigen travel). */
+internal object AncientSpotanims : SpotanimReferences() {
+    val ice_rush_travel = find("ice_rush_travel")
+    val ice_rush_impact = find("ice_rush_impact")
+    val ice_burst_travel = find("ice_burst_travel")
+    val ice_burst_impact = find("ice_burst_impact")
+    val ice_blitz_travel = find("ice_blitz_travel")
+    val ice_blitz_impact = find("ice_blitz_impact")
+    val ice_barrage_travel = find("ice_barrage_travel")
+    val ice_barrage_impact = find("ice_barrage_impact")
+    val blood_rush_travel = find("blood_rush_travel")
+    val blood_rush_impact = find("blood_rush_impact")
+    val blood_burst_impact = find("spell_blood_burst_impact")
+    val blood_blitz_travel = find("blood_blitz_travel")
+    val blood_blitz_impact = find("blood_blitz_impact")
+    val blood_barrage_impact = find("spell_blood_barrage_impact")
+    val smoke_rush_travel = find("smoke_rush_travel")
+    val smoke_rush_impact = find("smoke_rush_impact")
+    val smoke_burst_travel = find("smoke_burst_travel")
+    val smoke_burst_impact = find("smoke_burst_impact")
+    val smoke_blitz_travel = find("smoke_blitz_travel")
+    val smoke_blitz_impact = find("smoke_blitz_impact")
+    val smoke_barrage_travel = find("smoke_barrage_travel")
+    val smoke_barrage_impact = find("smoke_barrage_impact")
+    val shadow_rush_travel = find("shadow_rush_travel")
+    val shadow_rush_impact = find("shadow_rush_impact")
+    val shadow_burst_impact = find("shadow_burst_impact")
+    val shadow_blitz_travel = find("shadow_blitz_travel")
+    val shadow_blitz_impact = find("shadow_blitz_impact")
+    val shadow_barrage_impact = find("shadow_barrage_impact")
+}
+
+/** Ancient spell impact-sounds uit de cache. */
+internal object AncientSynths : SynthReferences() {
+    val ice_rush = find("ice_rush_impact")
+    val ice_burst = find("ice_burst_impact")
+    val ice_blitz = find("ice_blitz_impact")
+    val ice_barrage = find("ice_barrage_impact")
+    val blood_rush = find("blood_rush_impact")
+    val blood_burst = find("blood_burst_impact")
+    val blood_blitz = find("blood_blitz_impact")
+    val blood_barrage = find("blood_barrage_impact")
+    val smoke_rush = find("smoke_rush_impact")
+    val smoke_burst = find("smoke_burst_impact")
+    val smoke_blitz = find("smoke_blitz_impact")
+    val smoke_barrage = find("smoke_barrage_impact")
+    val shadow_rush = find("shadow_rush_impact")
+    val shadow_burst = find("shadow_burst_impact")
+    val shadow_blitz = find("shadow_blitz_impact")
+    val shadow_barrage = find("shadow_barrage_impact")
 }
