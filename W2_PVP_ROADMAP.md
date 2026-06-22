@@ -94,7 +94,7 @@ Acceptatie:
 3. Lange loc/afstand: klik de ditch van enkele tegels afstand -> loopt eerst naar de ditch, dan jump.
 4. Spam-click: meerdere keren snel klikken -> geen dubbele jump / geen vastlopen.
 
-## Fase 4 - Rewards En Economy  [GROTENDEELS KLAAR - web-hiscores TODO]
+## Fase 4 - Rewards En Economy  [KLAAR - live web-check nog te doen]
 
 Doel: kills geven motivatie zonder economie kapot te maken.
 
@@ -105,25 +105,27 @@ Doel: kills geven motivatie zonder economie kapot te maken.
       (+streak elke 5e kill); broadcast bij streak 5/10/15...
 - [x] Anti-farm: dezelfde tegenstander snel herhaald killen geeft diminishing returns (vol -> half
       -> 1 punt); de teller dooft na 2 min zonder kill op dat doelwit. Melding "(verlaagd - anti-farm)".
-- [ ] Web-hiscores W2-tab (kills/deaths/KD/streak/points) - vereist web-werk, apart traject.
+- [x] Web-hiscores PvP-tab (kills/deaths/KD/best-streak/points) via `tools/hiscores-web`.
 
 Acceptatie:
 - [x] Punten voelen nuttig maar gratis shops blijven bruikbaar voor testen.
 - [x] 2-account farmen levert beperkt voordeel op (diminishing returns).
 
-## Fase 5 - PvP UX En Hub
+## Fase 5 - PvP UX En Hub  [GEIMPLEMENTEERD - live 2-client test nog te doen]
 
 Doel: Edgeville als echte PK lobby.
 
-- Noticeboard uitbreiden met duidelijke W2 commands.
-- Bank, shops en ditch route visueel controleren.
-- Voeg duel-ready area toe net noord/zuid van Edgeville voor quick fights.
-- Voeg safe reset command toe: `::resetfight` voor spec, hp, prayer, skull clear of cooldowns.
-- Voeg optional `::skull` toe voor vrijwillig skulled testen.
-- Voeg broadcast toe bij killstreaks.
+- [x] Noticeboard uitgebreid met duidelijke W2 commands.
+- [x] Bank, shops en ditch route visueel ondersteund met hub/quick-fight noticeboards.
+- [x] Duel-ready area toegevoegd net zuid/noord van Edgeville voor quick fights:
+      `::duelarea` = staging zuid, `::wildfight` = wilderness noord.
+- [x] Safe reset command: `::resetfight` herstelt spec, HP/prayer/stats, skull en teleblock.
+- [x] Optional `::skull` toegevoegd voor vrijwillig skulled testen.
+- [x] Broadcast bij killstreaks bestaat in `PlayerDeath` (mijlpalen 5/10/15...).
 
 Acceptatie:
-- Nieuwe speler ziet zonder uitleg waar gear, bank, food en fight-start zijn.
+- [ ] Nieuwe speler ziet zonder uitleg waar gear, bank, food en fight-start zijn
+      (nog live in client nalopen).
 
 ## Fase 6 - Structurele 2-Client Test
 

@@ -38,6 +38,13 @@ constructor(
 
     private fun consumeMaxHit(player: Player): Boolean = maxHitArmed.remove(player.slotId)
 
+    /**
+     * Toggle geforceerde max hit voor [player]: zolang aan, doet ELKE hit (normaal én special)
+     * gegarandeerd max damage en mist nooit. Delegeert naar [PlayerAttackManager.toggleForcedMaxHit].
+     * Geeft de nieuwe staat terug (true = aan).
+     */
+    public fun toggleMaxHit(player: Player): Boolean = manager.toggleForcedMaxHit(player)
+
     public fun hasSpecialEnergy(source: ProtectedAccess, energyInHundreds: Int): Boolean {
         return energy.hasSpecialEnergy(source.player, energyInHundreds)
     }

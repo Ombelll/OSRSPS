@@ -36,6 +36,10 @@ internal object TeleBlockState {
         val expiry = until[player.slotId] ?: return 0
         return ((expiry - System.currentTimeMillis()) / 1000).coerceAtLeast(0)
     }
+
+    fun clear(player: Player) {
+        until.remove(player.slotId)
+    }
 }
 
 class WildernessRules @Inject constructor(private val players: PlayerList) : PluginScript() {

@@ -4,6 +4,7 @@ import org.rsmod.api.player.output.mes
 import org.rsmod.api.player.vars.VarPlayerIntMapSetter
 import org.rsmod.api.player.vars.resyncVar
 import org.rsmod.api.script.onCommand
+import org.rsmod.api.script.onPlayerLogin
 import org.rsmod.api.type.refs.varbit.VarBitReferences
 import org.rsmod.api.type.refs.varp.VarpReferences
 import org.rsmod.game.entity.Player
@@ -16,6 +17,12 @@ internal object QuestUnlockVarps : VarpReferences() {
     val qpTotal = find("qp_total")
     val qpTotal2 = find("qp_total2")
     val qpTotal3 = find("qp_total3")
+
+    // Spellbook-gating quests: de client greyt spells (bv. Vengeance) tot de quest-progress-varp op
+    // z'n endstate (voltooid) staat. Endstate-waarden uit de quest-dbtable gehaald.
+    val lunarDiplomacy = find("lunar_quest") // endstate 190 -> lunar spells incl. Vengeance
+    val desertTreasure = find("deserttreasuremain") // endstate 15 -> Ancient Magicks
+    val dreamMentor = find("dream_main") // endstate 28 -> hogere lunar combat spells
 }
 
 internal object QuestUnlockVarBits : VarBitReferences() {
@@ -110,11 +117,28 @@ internal object QuestUnlockVarBits : VarBitReferences() {
 
 class QuestUnlocks : PluginScript() {
     override fun ScriptContext.startup() {
+        // Quest-requirement van spells (Vengeance/Ancients/lunar) weghalen: bij elke login de
+        // spellbook-gating quests op voltooid zetten, zodat de client die spells niet meer greyt -
+        // ook zonder ::maxgear.
+        onPlayerLogin { player.unlockSpellbookQuests() }
+
         onCommand("unlockquests") {
             desc = "Unlock custom quests, quest points, diaries, spellbook gates and slayer gates"
             cheat {
                 player.unlockQuestProgress()
                 player.mes("Quest progress unlocked: max quest points, custom quests, diaries and gates.")
+            }
+        }
+
+        onCommand("qpdebug") {
+            desc = "(hidden)"
+            cheat {
+                player.mes("--- QP debug (opgeslagen waarden) ---")
+                player.mes("qp_total=${player.vars[QuestUnlockVarps.qpTotal]} " +
+                    "qp_total2=${player.vars[QuestUnlockVarps.qpTotal2]} " +
+                    "qp_total3=${player.vars[QuestUnlockVarps.qpTotal3]}")
+                player.mes("qp_max(varbit)=${player.vars[QuestUnlockVarBits.qpMax]} " +
+                    "quests_completed_count=${player.vars[QuestUnlockVarBits.questsCompletedCount]}")
             }
         }
     }
@@ -137,6 +161,7 @@ internal fun Player.unlockQuestProgress() {
     setVarBit(QuestUnlockVarBits.knightWavesState, 8)
 
     setCustomQuestVarps()
+    unlockSpellbookQuests()
     for (diaryBit in QuestUnlockVarBits.diaryCompletions) {
         setVarBit(diaryBit, 1)
     }
@@ -145,6 +170,17 @@ internal fun Player.unlockQuestProgress() {
     }
 
     PvmProgress.setQuestsDone(this, CUSTOM_QUEST_COMPLETIONS)
+}
+
+/**
+ * Zet de spellbook-gating quests op "voltooid" zodat de client de bijbehorende spells niet meer
+ * greyt: Vengeance (Lunar Diplomacy), Ancient Magicks (Desert Treasure) en de hogere lunar combat
+ * spells (Dream Mentor). Endstate-waarden komen uit de quest-dbtable.
+ */
+internal fun Player.unlockSpellbookQuests() {
+    setVarp(QuestUnlockVarps.lunarDiplomacy, 190)
+    setVarp(QuestUnlockVarps.desertTreasure, 15)
+    setVarp(QuestUnlockVarps.dreamMentor, 28)
 }
 
 private fun Player.setCustomQuestVarps() {
@@ -179,7 +215,9 @@ private fun Player.setVarBitClamped(varbit: VarBitType, requestedValue: Int) {
 }
 
 private const val MAX_QUEST_POINTS = 320
-private const val MAX_COMPLETED_QUESTS = 180
+// "Quests Completed: X/320" in het character-tabblad leest quests_completed_count als X en
+// qp_max als noemer. Gelijk aan 320 zodat de teller vol (320/320) staat na ::maxgear/::unlockquests.
+private const val MAX_COMPLETED_QUESTS = 320
 private const val MAX_COMPLETED_SUBQUESTS = 20
 private const val MAX_COMPLETED_MINIQUESTS = 30
 private const val CUSTOM_QUEST_COMPLETIONS = 10

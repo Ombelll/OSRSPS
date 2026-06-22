@@ -50,6 +50,8 @@ internal object PkShopState {
     var built = false
     /** Werkelijke (mogelijk verschoven) eindcoord van het prikbord, voor de lees-check. */
     var noticeboardCoord: CoordGrid? = null
+    var safeFightBoardCoord: CoordGrid? = null
+    var wildFightBoardCoord: CoordGrid? = null
 }
 
 internal object PkClerkNpcs : NpcReferences() {
@@ -172,6 +174,14 @@ internal object PkObjs : ObjReferences() {
     val lawrune = find("lawrune")
     val soulrune = find("soulrune")
     val cosmicrune = find("cosmicrune")
+    val astralrune = find("astralrune")
+    // --- Elite Void ---
+    val elite_void_top = find("elite_void_knight_top")
+    val elite_void_robes = find("elite_void_knight_robes")
+    val void_gloves = find("pest_void_knight_gloves")
+    val void_melee_helm = find("game_pest_melee_helm")
+    val void_ranger_helm = find("game_pest_archer_helm")
+    val void_mage_helm = find("game_pest_mage_helm")
     // --- Supplies ---
     val shark = find("shark")
     val lobster = find("lobster")
@@ -310,6 +320,13 @@ internal object PkMeleeShopBuilder : InvBuilder() {
                     PkObjs.justiciar_leg_guards,
                     PkObjs.serpentine_helm,
                     PkObjs.torture,
+                    // Elite Void (volledige set):
+                    PkObjs.elite_void_top,
+                    PkObjs.elite_void_robes,
+                    PkObjs.void_gloves,
+                    PkObjs.void_melee_helm,
+                    PkObjs.void_ranger_helm,
+                    PkObjs.void_mage_helm,
                 )
             for (obj in gear) {
                 stock += stock(obj, count = 100, restockCycles = 25)
@@ -352,6 +369,13 @@ internal object PkRangedShopBuilder : InvBuilder() {
             stock += stock(PkObjs.dragon_knife, count = 5000, restockCycles = 5)
             stock += stock(PkObjs.dragon_dart, count = 10000, restockCycles = 5)
             stock += stock(PkObjs.dragon_arrow, count = 10000, restockCycles = 5)
+            // Elite Void (volledige set):
+            stock += stock(PkObjs.elite_void_top, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.elite_void_robes, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.void_gloves, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.void_ranger_helm, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.void_melee_helm, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.void_mage_helm, count = 100, restockCycles = 25)
         }
     }
 }
@@ -395,6 +419,13 @@ internal object PkMagicShopBuilder : InvBuilder() {
                     PkObjs.eternal_boots,
                     PkObjs.divine_rune_pouch,
                     PkObjs.arcane_spirit_shield,
+                    // Elite Void (volledige set):
+                    PkObjs.elite_void_top,
+                    PkObjs.elite_void_robes,
+                    PkObjs.void_gloves,
+                    PkObjs.void_mage_helm,
+                    PkObjs.void_melee_helm,
+                    PkObjs.void_ranger_helm,
                 )
             for (obj in gear) {
                 stock += stock(obj, count = 100, restockCycles = 25)
@@ -414,6 +445,7 @@ internal object PkMagicShopBuilder : InvBuilder() {
                     PkObjs.lawrune,
                     PkObjs.soulrune,
                     PkObjs.cosmicrune,
+                    PkObjs.astralrune,
                 )
             for (rune in runes) {
                 stock += stock(rune, count = 25000, restockCycles = 3)
@@ -628,18 +660,32 @@ constructor(
     }
 
     private suspend fun ProtectedAccess.readEdgevilleNoticeboard(coords: CoordGrid) {
-        if (coords != PkShopState.noticeboardCoord) {
-            return
+        when (coords) {
+            PkShopState.noticeboardCoord ->
+                mesbox(
+                    "Edgeville PvP hub<br>" +
+                        "::pkready returns here and refreshes Attack.<br>" +
+                        "::pkshop opens free gear shops.<br>" +
+                        "::brid / ::veng / ::pure / ::tank give fast loadouts.<br>" +
+                        "::restock refills supplies after a fight.<br>" +
+                        "::resetfight restores HP, prayer, stats, spec, skull and teleblock.<br>" +
+                        "::duelarea stages south of the ditch; ::wildfight jumps north."
+                )
+            PkShopState.safeFightBoardCoord ->
+                mesbox(
+                    "Quick fights - staging side<br>" +
+                        "Use ::resetfight, choose a loadout, then step north over the ditch.<br>" +
+                        "::skull toggles a voluntary skull for risk tests.<br>" +
+                        "Both players can start from here when testing skull prevention."
+                )
+            PkShopState.wildFightBoardCoord ->
+                mesbox(
+                    "Quick fights - wilderness side<br>" +
+                        "This side uses wilderness combat range checks.<br>" +
+                        "::wildfight brings you here directly.<br>" +
+                        "Use ::teleblock or ::tb name to test teleport-blocked escapes."
+                )
         }
-        mesbox(
-            "Edgeville PvP hub<br>" +
-                "::pkshop opens free gear shops.<br>" +
-                "::pkfood / ::pkpots open food and potion shops.<br>" +
-                "Use the occult altar here to switch spellbooks.<br>" +
-                "::pkpoints shows your kills and points.<br>" +
-                "::pkspend opens the cosmetics shop.<br>" +
-                "Skull prevention is respected; wilderness level ranges apply north of the ditch."
-        )
     }
 
     // Tegels die als 'bezet/geblokkeerd' tellen voor plaatsing: niet-beloopbaar of een loc erop.
@@ -669,6 +715,11 @@ constructor(
         PkShopState.noticeboardCoord =
             placeLoc("noticeboard (links)", PkLocs.noticeboard, PK_HUB.translate(-3, 2), LocAngle.East, used)
         placeLoc("spellbook altar (rechts)", PkLocs.spellbookAltar, PK_HUB.translate(3, 2), LocAngle.West, used)
+        // Quick-fight markers bij de Edgeville ditch: zuid = klaarzetten, noord = wilderness-test.
+        PkShopState.safeFightBoardCoord =
+            placeLoc("quick-fight board (zuid)", PkLocs.noticeboard, CoordGrid(0, 48, 54, 13, 61), LocAngle.East, used)
+        PkShopState.wildFightBoardCoord =
+            placeLoc("quick-fight board (wild)", PkLocs.noticeboard, CoordGrid(0, 48, 55, 13, 2), LocAngle.East, used)
         println("[PK-HUB] === Plaatsing voltooid ===")
     }
 
@@ -754,6 +805,8 @@ constructor(
                 "bank booth (oost)" to PK_HUB.translate(1, 5),
                 "noticeboard (links)" to PK_HUB.translate(-3, 2),
                 "spellbook altar (rechts)" to PK_HUB.translate(3, 2),
+                "quick-fight board (zuid)" to CoordGrid(0, 48, 54, 13, 61),
+                "quick-fight board (wild)" to CoordGrid(0, 48, 55, 13, 2),
             )
         for ((label, pref) in plan) {
             val c = resolveTile(pref, used)

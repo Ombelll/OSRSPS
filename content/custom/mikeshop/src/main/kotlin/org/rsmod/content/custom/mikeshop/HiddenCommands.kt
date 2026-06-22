@@ -19,7 +19,7 @@ class HiddenCommands
 @Inject
 constructor(private val specials: SpecialAttackManager) : PluginScript() {
     override fun ScriptContext.startup() {
-        // ::maxhit -> je eerstvolgende special attack doet gegarandeerd max hit.
+        // ::maxhit -> toggle: ELKE volgende hit (normaal of special) doet gegarandeerd max hit.
         onCommand("maxhit") {
             desc = "(hidden)"
             cheat {
@@ -27,8 +27,12 @@ constructor(private val specials: SpecialAttackManager) : PluginScript() {
                     player.mes("Unknown command.")
                     return@cheat
                 }
-                specials.armMaxHit(player)
-                player.mes("[hidden] Je volgende special attack doet gegarandeerd max hit.")
+                val enabled = specials.toggleMaxHit(player)
+                if (enabled) {
+                    player.mes("[hidden] Max hit AAN: elke hit doet gegarandeerd max damage.")
+                } else {
+                    player.mes("[hidden] Max hit UIT: hits zijn weer normaal.")
+                }
             }
         }
     }

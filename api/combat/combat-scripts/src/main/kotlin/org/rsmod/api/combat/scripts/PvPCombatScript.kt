@@ -117,6 +117,12 @@ constructor(
             clearPendingAction()
             return false
         }
+        // Veilige zone: geen PvP bij de Edgeville-bank/hub (banken/gear pakken zonder gevaar).
+        if (inBankSafeZone(player) || inBankSafeZone(target)) {
+            mes("You can't fight here - the bank area is a safe zone. Head north into the Wilderness.")
+            clearPendingAction()
+            return false
+        }
         if (!isWithinWildernessRange(target)) {
             clearPendingAction()
             return false
@@ -197,6 +203,14 @@ constructor(
                 "Your level range is $allowedDifference."
         )
         return false
+    }
+
+    // Edgeville PK-hub/bank veilige zone (bank + shops). Ruim ten zuiden van de wildernis-ditch
+    // (z 3520), zodat je veilig kunt banken/gearen; noordwaarts de wild in geldt PvP weer.
+    private fun inBankSafeZone(player: Player): Boolean {
+        val x = player.coords.x
+        val z = player.coords.z
+        return x in 3078..3099 && z in 3486..3512
     }
 
     private fun Player.wildernessLevel(): Int? {

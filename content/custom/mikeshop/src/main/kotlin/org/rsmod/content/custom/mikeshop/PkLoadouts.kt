@@ -143,6 +143,7 @@ class PkLoadouts @Inject constructor() : PluginScript() {
         invAdd(inv, MaxGearObjs.deathrune, 1000, strict = false)
         invAdd(inv, MaxGearObjs.bloodrune, 1000, strict = false)
         invAdd(inv, MaxGearObjs.soulrune, 1000, strict = false)
+        invAdd(inv, MaxGearObjs.astralrune, 1000, strict = false)
     }
 
     private fun Player.giveSupplies(brews: Int, restores: Int, karam: Int, angler: Int) {

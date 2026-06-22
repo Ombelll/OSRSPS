@@ -85,6 +85,7 @@ internal object MaxGearObjs : ObjReferences() {
     val deathrune = find("deathrune")
     val bloodrune = find("bloodrune")
     val soulrune = find("soulrune")
+    val astralrune = find("astralrune")
 }
 
 /** ::maxgear -> PK-testloadout met max stats, unlocks, Ancients en veel switches. */
@@ -171,6 +172,7 @@ class MaxGear @Inject constructor() : PluginScript() {
                 player.invAdd(player.inv, MaxGearObjs.deathrune, 1000, strict = false)
                 player.invAdd(player.inv, MaxGearObjs.bloodrune, 1000, strict = false)
                 player.invAdd(player.inv, MaxGearObjs.soulrune, 1000, strict = false)
+                player.invAdd(player.inv, MaxGearObjs.astralrune, 1000, strict = false)
 
                 player.invAdd(player.inv, MaxGearObjs.super_combat, 1, strict = false)
                 player.invAdd(player.inv, MaxGearObjs.anglerfish, 4, strict = false)

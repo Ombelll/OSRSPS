@@ -466,6 +466,22 @@ constructor(
      * @return `0` if the accuracy roll fails; otherwise, a random damage value from `0` up to the
      *   calculated max hit.
      */
+    // CHEAT (Mike): geforceerde max hit. Zolang een speler hierin staat, mist ELKE melee/ranged hit
+    // (normaal of special) nooit en doet gegarandeerd max damage. Toggle via HiddenCommands ::maxhit.
+    private val forcedMaxHit = HashSet<Int>()
+
+    /** Zet geforceerde max hit aan/uit voor [player]. Geeft de nieuwe staat terug (true = aan). */
+    public fun toggleForcedMaxHit(player: Player): Boolean {
+        return if (forcedMaxHit.add(player.slotId)) {
+            true
+        } else {
+            forcedMaxHit.remove(player.slotId)
+            false
+        }
+    }
+
+    public fun isForcedMaxHit(player: Player): Boolean = player.slotId in forcedMaxHit
+
     public fun rollMeleeDamage(
         source: Player,
         target: PathingEntity,
@@ -476,6 +492,9 @@ constructor(
         attackStyle: MeleeAttackStyle? = attack.style,
         blockType: MeleeAttackType? = attack.type,
     ): Int {
+        if (source.slotId in forcedMaxHit) {
+            return calculateMeleeMaxHit(source, target, attackType, attackStyle, maxHitMultiplier)
+        }
         val successfulAccuracyRoll =
             rollMeleeAccuracy(
                 source = source,
@@ -722,6 +741,16 @@ constructor(
         blockType: RangedAttackType? = attack.type,
         boltSpecDamage: Int = 0,
     ): Int {
+        if (source.slotId in forcedMaxHit) {
+            return calculateRangedMaxHit(
+                source,
+                target,
+                attackType,
+                attackStyle,
+                maxHitMultiplier,
+                boltSpecDamage,
+            )
+        }
         val successfulAccuracyRoll =
             rollRangedAccuracy(
                 source = source,

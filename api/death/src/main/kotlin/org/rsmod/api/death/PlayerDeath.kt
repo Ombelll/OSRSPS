@@ -40,6 +40,8 @@ constructor(
     private var Player.specialAttackType by intVarp(varps.sa_attack)
     private var Player.pkPoints by intVarp(varps.mike_pk_points)
     private var Player.pkKills by intVarp(varps.mike_pk_kills)
+    private var Player.pkDeaths by intVarp(varps.mike_pk_deaths)
+    private var Player.pkBestStreak by intVarp(varps.mike_pk_best_streak)
     private val Player.protectItemActive by boolVarBit(varbits.protect_item)
 
     // PK-punten/killstreaks gelden alleen op de PvP-wereld (RSMOD_WORLD=2).
@@ -94,15 +96,17 @@ constructor(
         if (killer === victim) {
             return null
         }
+        victim.pkDeaths += 1
         val victimStreakLost = pvpKills.endStreak(victim.displayName)
         val result =
             pvpKills.recordKill(killer.displayName, victim.displayName, killer.pkKills, killer.pkPoints)
         killer.pkKills = result.kills
         killer.pkPoints = result.points
+        killer.pkBestStreak = maxOf(killer.pkBestStreak, result.bestStreak)
         val farmNote = if (result.farmed) " (verlaagd - anti-farm)" else ""
         killer.mes("You killed ${victim.displayName}! +${result.gained} PK points$farmNote.")
         killer.mes(
-            "Streak: ${result.streak} (best: ${result.bestStreak}). " +
+            "Streak: ${result.streak} (best: ${killer.pkBestStreak}). " +
                 "Total: ${result.points} PK points (::pkspend)."
         )
         victim.mes(

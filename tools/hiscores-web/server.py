@@ -38,6 +38,11 @@ SKILLS = [
     "Construction",
 ]
 
+PK_POINTS_VARP = 9004
+PK_KILLS_VARP = 9005
+PK_DEATHS_VARP = 9009
+PK_BEST_STREAK_VARP = 9010
+
 
 @dataclass(frozen=True)
 class WorldDb:
@@ -100,20 +105,33 @@ class HiscoresHandler(BaseHTTPRequestHandler):
                 "rows": [],
             }
 
-        if skill_arg == "overall":
+        if skill_arg == "pvp":
+            rows = load_pvp_hiscores(world.path)
+        elif skill_arg == "overall":
             rows = load_overall_hiscores(world.path)
         else:
             rows = [row for row in load_skill_hiscores(world.path) if row["skill"].lower() == skill_arg]
         if search:
             rows = [row for row in rows if search in row["displayName"].lower()]
-        rows.sort(key=lambda row: (-row["xp"], -row["level"], row["displayName"].lower(), row["skillId"]))
+        if skill_arg == "pvp":
+            rows.sort(
+                key=lambda row: (
+                    -row["points"],
+                    -row["kills"],
+                    -row["bestStreak"],
+                    row["displayName"].lower(),
+                )
+            )
+        else:
+            rows.sort(key=lambda row: (-row["xp"], -row["level"], row["displayName"].lower(), row["skillId"]))
         for index, row in enumerate(rows, start=1):
             row["rank"] = index
         return {
             "ok": True,
             "world": world.label,
             "updatedFrom": str(world.path),
-            "skills": ["Overall", *SKILLS],
+            "kind": "pvp" if skill_arg == "pvp" else "skills",
+            "skills": ["PvP", "Overall", *SKILLS],
             "rows": rows[:limit],
             "count": len(rows),
         }
@@ -191,6 +209,53 @@ def load_skill_hiscores(path: Path) -> list[dict[str, Any]]:
         return [format_row(row) for row in connection.execute(query)]
 
 
+def load_pvp_hiscores(path: Path) -> list[dict[str, Any]]:
+    uri = f"file:{path.as_posix()}?mode=ro"
+    query = """
+        SELECT
+            COALESCE(a.display_name, a.login_username) AS display_name,
+            c.varps,
+            c.last_logout
+        FROM characters c
+        JOIN accounts a ON a.id = c.account_id
+        ORDER BY display_name
+    """
+    rows: list[dict[str, Any]] = []
+    with sqlite3.connect(uri, uri=True) as connection:
+        connection.row_factory = sqlite3.Row
+        for row in connection.execute(query):
+            varps = parse_varps(row["varps"])
+            kills = int(varps.get(PK_KILLS_VARP, 0))
+            deaths = int(varps.get(PK_DEATHS_VARP, 0))
+            points = int(varps.get(PK_POINTS_VARP, 0))
+            best_streak = int(varps.get(PK_BEST_STREAK_VARP, 0))
+            if kills == 0 and deaths == 0 and points == 0 and best_streak == 0:
+                continue
+            kd = float(kills) if deaths == 0 else kills / deaths
+            rows.append(
+                {
+                    "displayName": html.escape(str(row["display_name"] or "Unknown")),
+                    "kills": kills,
+                    "deaths": deaths,
+                    "kd": round(kd, 2),
+                    "bestStreak": best_streak,
+                    "points": points,
+                    "lastLogout": row["last_logout"],
+                }
+            )
+    return rows
+
+
+def parse_varps(raw: str | None) -> dict[int, int]:
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        return {}
+    return {int(key): int(value) for key, value in parsed.items()}
+
+
 def format_row(row: sqlite3.Row) -> dict[str, Any]:
     stat_id = int(row["stat_id"])
     return {
@@ -217,7 +282,8 @@ def clamp_int(value: str, minimum: int, maximum: int) -> int:
 
 
 def render_page() -> str:
-    skills = "".join(f"<option value=\"{skill.lower()}\">{skill}</option>" for skill in ["Overall", *SKILLS])
+    skills = '<option value="pvp">PvP</option><option value="overall" selected>Overall</option>'
+    skills += "".join(f"<option value=\"{skill.lower()}\">{skill}</option>" for skill in SKILLS)
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -368,7 +434,7 @@ def render_page() -> str:
     <div class="table-wrap">
       <table>
         <thead>
-          <tr>
+          <tr id="head-row">
             <th>Rank</th>
             <th>Player</th>
             <th>Skill</th>
@@ -383,6 +449,7 @@ def render_page() -> str:
   </main>
   <script>
     const controls = ["world", "skill", "search", "limit"].map((id) => document.getElementById(id));
+    const headRow = document.getElementById("head-row");
     const rows = document.getElementById("rows");
     const status = document.getElementById("status");
     let timer;
@@ -410,9 +477,42 @@ def render_page() -> str:
       }}
       status.innerHTML = `<span class="pill">${{payload.world}}</span> ${{payload.count}} ranked rows`;
       if (payload.rows.length === 0) {{
-        rows.innerHTML = '<tr><td colspan="6" class="empty">No hiscore rows found.</td></tr>';
+        rows.innerHTML = '<tr><td colspan="7" class="empty">No hiscore rows found.</td></tr>';
         return;
       }}
+      if (payload.kind === "pvp") {{
+        headRow.innerHTML = `
+          <th>Rank</th>
+          <th>Player</th>
+          <th class="num">Kills</th>
+          <th class="num">Deaths</th>
+          <th class="num">KD</th>
+          <th class="num">Best streak</th>
+          <th class="num">Points</th>
+          <th>Last logout</th>
+        `;
+        rows.innerHTML = payload.rows.map((row) => `
+          <tr>
+            <td class="rank">#${{row.rank}}</td>
+            <td class="player">${{row.displayName}}</td>
+            <td class="num">${{row.kills.toLocaleString()}}</td>
+            <td class="num">${{row.deaths.toLocaleString()}}</td>
+            <td class="num">${{row.kd.toFixed(2)}}</td>
+            <td class="num">${{row.bestStreak.toLocaleString()}}</td>
+            <td class="num">${{row.points.toLocaleString()}}</td>
+            <td>${{row.lastLogout || "Never"}}</td>
+          </tr>
+        `).join("");
+        return;
+      }}
+      headRow.innerHTML = `
+        <th>Rank</th>
+        <th>Player</th>
+        <th>Skill</th>
+        <th class="num">Level</th>
+        <th class="num">XP</th>
+        <th>Last logout</th>
+      `;
       rows.innerHTML = payload.rows.map((row) => `
         <tr>
           <td class="rank">#${{row.rank}}</td>

@@ -7,10 +7,16 @@ import org.rsmod.api.config.refs.params
 import org.rsmod.api.config.refs.queues
 import org.rsmod.api.config.refs.stats
 import org.rsmod.api.config.refs.synths
+import org.rsmod.api.config.refs.varbits
 import org.rsmod.api.player.headbar.InternalPlayerHeadbars
+import org.rsmod.api.player.hit.modifier.NoopPlayerHitModifier
+import org.rsmod.api.player.hit.queueHit
 import org.rsmod.api.player.lefthand
+import org.rsmod.api.player.output.mes
 import org.rsmod.api.player.output.soundSynth
 import org.rsmod.api.player.protect.ProtectedAccess
+import org.rsmod.api.player.vars.VarPlayerIntMapSetter
+import org.rsmod.api.player.vars.resyncVar
 import org.rsmod.api.player.stat.baseHitpointsLvl
 import org.rsmod.api.player.stat.hitpoints
 import org.rsmod.api.player.torso
@@ -40,6 +46,8 @@ public object StandardPlayerHitProcessor : QueuedPlayerHitProcessor {
             statSub(stats.hitpoints, constant = damage, percent = 0)
         }
 
+        processVengeanceRebound(hit, damage)
+
         playDefendSound(hit, random)
 
         val queueDeath = player.hitpoints == 0 && queues.death !in player.queueList
@@ -51,6 +59,32 @@ public object StandardPlayerHitProcessor : QueuedPlayerHitProcessor {
 
         val headbar = hit.createHeadbar(player.hitpoints, player.baseHitpointsLvl)
         player.showHeadbar(headbar)
+    }
+
+    /**
+     * Vengeance (lunar): als de speler "geladen" is ([varbits.vengeance_rebound]) en daadwerkelijk
+     * schade oploopt, kaatst 75% van die schade terug naar de aanvaller. De lading wordt verbruikt
+     * (eenmalig per cast). Alleen tegen spelers (PvP); npc-bron negeren we.
+     */
+    private fun ProtectedAccess.processVengeanceRebound(hit: Hit, damage: Int) {
+        if (damage <= 0) {
+            return
+        }
+        if (player.vars[varbits.vengeance_rebound] == 0) {
+            return
+        }
+        // Verbruik de lading.
+        VarPlayerIntMapSetter.set(player, varbits.vengeance_rebound, 0)
+        player.resyncVar(varbits.vengeance_rebound)
+
+        val attacker = if (hit.isFromPlayer) findHitPlayerSource(hit) else null
+        if (attacker != null) {
+            val reflect = damage * 3 / 4
+            if (reflect > 0) {
+                attacker.queueHit(player, 1, HitType.Melee, reflect, modifier = NoopPlayerHitModifier)
+            }
+        }
+        player.mes("Taste vengeance!")
     }
 
     private fun Hit.isValid(access: ProtectedAccess): Boolean {

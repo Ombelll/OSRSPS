@@ -99,6 +99,8 @@ object BaseVarps : VarpReferences() {
     val generic_storage_65531 = find("generic_storage_65531")
     val mike_pk_points = find("mike_pk_points")
     val mike_pk_kills = find("mike_pk_kills")
+    val mike_pk_deaths = find("mike_pk_deaths")
+    val mike_pk_best_streak = find("mike_pk_best_streak")
     val mike_arena_best_wave = find("mike_arena_best_wave")
 
     /*

@@ -1,6 +1,7 @@
 package org.rsmod.content.custom.mikeshop
 
 import jakarta.inject.Inject
+import java.util.Locale
 import org.rsmod.api.config.refs.objs
 import org.rsmod.api.config.refs.varps
 import org.rsmod.api.death.PvpKillTracker
@@ -19,10 +20,10 @@ import org.rsmod.plugin.scripts.ScriptContext
  * PK-punten (PvP-wereld): elke player-kill geeft punten (meer bij hogere killstreak; zie
  * PvpKillTracker + PlayerDeath). Hier check je je stats en geef je punten uit.
  *
- *  - ::pkpoints : toont je kills / punten / huidige streak
+ *  - ::pkpoints : toont je kills / deaths / KD / punten / huidige streak
  *  - ::pkspend  : puntenwinkel (coins, potion-packs, dragon claws, cosmetics)
  *
- * Kills en punten zijn persistent; killstreak is in-memory per server-sessie.
+ * Kills, deaths, punten en beste streak zijn persistent; huidige killstreak is per server-sessie.
  */
 class PkPoints
 @Inject
@@ -32,15 +33,22 @@ constructor(
 ) : PluginScript() {
     private var Player.pkPoints by intVarp(varps.mike_pk_points)
     private var Player.pkKills by intVarp(varps.mike_pk_kills)
+    private var Player.pkDeaths by intVarp(varps.mike_pk_deaths)
+    private var Player.pkBestStreak by intVarp(varps.mike_pk_best_streak)
 
     override fun ScriptContext.startup() {
         onCommand("pkpoints") {
             desc = "Show your PK kills, points and killstreak"
             cheat {
                 val name = player.displayName
+                val kd = if (player.pkDeaths == 0) player.pkKills.toDouble() else player.pkKills.toDouble() / player.pkDeaths
                 player.mes("--- PK stats for $name ---")
                 player.mes("Kills: ${player.pkKills}")
-                player.mes("Killstreak: ${tracker.streak(name)} (best this session: ${tracker.bestStreak(name)})")
+                player.mes("Deaths: ${player.pkDeaths} (KD: ${String.format(Locale.ROOT, "%.2f", kd)})")
+                player.mes(
+                    "Killstreak: ${tracker.streak(name)} " +
+                        "(best: ${maxOf(player.pkBestStreak, tracker.bestStreak(name))})"
+                )
                 player.mes("PK points: ${player.pkPoints} (spend with ::pkspend)")
             }
         }
