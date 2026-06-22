@@ -738,6 +738,8 @@ object BaseObjs : ObjReferences() {
     val magic_shortbow_i = find("magic_shortbow_i")
 
     val dark_bow = find("darkbow")
+    val voidwaker = find("voidwaker")
+    val heavy_ballista = find("heavy_ballista")
     val dark_bow_green = find("darkbow_green")
     val dark_bow_blue = find("darkbow_blue")
     val dark_bow_yellow = find("darkbow_yellow")

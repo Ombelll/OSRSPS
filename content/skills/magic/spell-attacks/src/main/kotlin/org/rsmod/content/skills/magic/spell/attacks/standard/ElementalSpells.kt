@@ -2,13 +2,16 @@ package org.rsmod.content.skills.magic.spell.attacks.standard
 
 import jakarta.inject.Inject
 import org.rsmod.api.combat.commons.CombatAttack
+import org.rsmod.api.combat.manager.FreezeState
 import org.rsmod.api.combat.manager.MagicRuneManager.Companion.isFailure
 import org.rsmod.api.config.refs.categories
 import org.rsmod.api.config.refs.objs
+import org.rsmod.api.config.refs.stats
 import org.rsmod.api.config.refs.projanims
 import org.rsmod.api.config.refs.seqs
 import org.rsmod.api.config.refs.spotanims
 import org.rsmod.api.config.refs.synths
+import org.rsmod.api.player.output.mes
 import org.rsmod.api.player.protect.ProtectedAccess
 import org.rsmod.api.player.stat.magicLvl
 import org.rsmod.api.spells.attack.SpellAttack
@@ -37,11 +40,11 @@ class ElementalSpells @Inject constructor(private val objTypes: ObjTypeList) : S
     }
 
     /**
-     * Alle ancient combat-spells (Rush/Burst/Blitz/Barrage in Smoke/Shadow/Blood/Ice). Hergebruikt
-     * [ElementalSpellAttack] met een vaste max hit per tier. Zonder deze registratie geeft casten
-     * "nothing happens" (de spells stonden wel in de spellbook, maar er was geen SpellAttack). Ice'
-     * freeze zit los in PvPCombatScript. Spotanims/sounds komen uit de cache via [AncientSpotanims]/
-     * [AncientSynths]; bursts/barrages zonder eigen "travel"-projectiel gebruiken hun impact-graphic.
+     * Alle ancient combat-spells (Rush/Burst/Blitz/Barrage in Smoke/Shadow/Blood/Ice) via
+     * [AncientSpellAttack] met een vaste max hit per tier. Ice-spells bevriezen het doelwit op een
+     * rake hit ([freezeTicks]); Blood-spells genezen de caster ([bloodHeal]). Spotanims/sounds komen
+     * uit de cache via [AncientSpotanims]/[AncientSynths]; bursts/barrages zonder eigen
+     * "travel"-projectiel gebruiken hun impact-graphic. Smoke-poison/Shadow-drain nog niet gewired.
      */
     private fun SpellAttackRepository.registerAncients(manager: SpellAttackManager) {
         val s = AncientSpotanims
@@ -53,11 +56,13 @@ class ElementalSpells @Inject constructor(private val objTypes: ObjTypeList) : S
             impact: SpotanimType,
             sound: SynthType,
             maxHit: Int,
+            freezeTicks: Int = 0,
+            bloodHeal: Boolean = false,
         ) {
             register(
                 spell = spell,
                 attack =
-                    ElementalSpellAttack(
+                    AncientSpellAttack(
                         manager = manager,
                         objTypes = objTypes,
                         staffAnim = seqs.human_caststrike_staff,
@@ -68,26 +73,28 @@ class ElementalSpells @Inject constructor(private val objTypes: ObjTypeList) : S
                         castSound = sound,
                         hitSound = sound,
                         getMaxHit = { maxHit },
+                        freezeTicks = freezeTicks,
+                        bloodHeal = bloodHeal,
                     ),
             )
         }
 
-        // Ice (rush/burst/blitz/barrage) - bevriest ook (zie PvPCombatScript).
-        ancient(objs.spell_ice_rush, s.ice_rush_travel, s.ice_rush_impact, sy.ice_rush, 16)
-        ancient(objs.spell_ice_burst, s.ice_burst_travel, s.ice_burst_impact, sy.ice_burst, 22)
-        ancient(objs.spell_ice_blitz, s.ice_blitz_travel, s.ice_blitz_impact, sy.ice_blitz, 26)
-        ancient(objs.spell_ice_barrage, s.ice_barrage_travel, s.ice_barrage_impact, sy.ice_barrage, 30)
-        // Blood (heal-effect nog niet gewired).
-        ancient(objs.spell_blood_rush, s.blood_rush_travel, s.blood_rush_impact, sy.blood_rush, 15)
-        ancient(objs.spell_blood_burst, s.blood_burst_impact, s.blood_burst_impact, sy.blood_burst, 21)
-        ancient(objs.spell_blood_blitz, s.blood_blitz_travel, s.blood_blitz_impact, sy.blood_blitz, 25)
-        ancient(objs.spell_blood_barrage, s.blood_barrage_impact, s.blood_barrage_impact, sy.blood_barrage, 29)
+        // Ice (rush/burst/blitz/barrage) - bevriest het doelwit op een rake hit.
+        ancient(objs.spell_ice_rush, s.ice_rush_travel, s.ice_rush_impact, sy.ice_rush, 16, freezeTicks = 8)
+        ancient(objs.spell_ice_burst, s.ice_burst_travel, s.ice_burst_impact, sy.ice_burst, 22, freezeTicks = 16)
+        ancient(objs.spell_ice_blitz, s.ice_blitz_travel, s.ice_blitz_impact, sy.ice_blitz, 26, freezeTicks = 24)
+        ancient(objs.spell_ice_barrage, s.ice_barrage_travel, s.ice_barrage_impact, sy.ice_barrage, 30, freezeTicks = 32)
+        // Blood - geneest de caster met 25% van de schade.
+        ancient(objs.spell_blood_rush, s.blood_rush_travel, s.blood_rush_impact, sy.blood_rush, 15, bloodHeal = true)
+        ancient(objs.spell_blood_burst, s.blood_burst_impact, s.blood_burst_impact, sy.blood_burst, 21, bloodHeal = true)
+        ancient(objs.spell_blood_blitz, s.blood_blitz_travel, s.blood_blitz_impact, sy.blood_blitz, 25, bloodHeal = true)
+        ancient(objs.spell_blood_barrage, s.blood_barrage_impact, s.blood_barrage_impact, sy.blood_barrage, 29, bloodHeal = true)
         // Smoke (poison-effect nog niet gewired).
         ancient(objs.spell_smoke_rush, s.smoke_rush_travel, s.smoke_rush_impact, sy.smoke_rush, 14)
         ancient(objs.spell_smoke_burst, s.smoke_burst_travel, s.smoke_burst_impact, sy.smoke_burst, 20)
         ancient(objs.spell_smoke_blitz, s.smoke_blitz_travel, s.smoke_blitz_impact, sy.smoke_blitz, 24)
         ancient(objs.spell_smoke_barrage, s.smoke_barrage_travel, s.smoke_barrage_impact, sy.smoke_barrage, 27)
-        // Shadow (att-reduce-effect nog niet gewired).
+        // Shadow (attack-drain-effect nog niet gewired).
         ancient(objs.spell_shadow_rush, s.shadow_rush_travel, s.shadow_rush_impact, sy.shadow_rush, 14)
         ancient(objs.spell_shadow_burst, s.shadow_burst_impact, s.shadow_burst_impact, sy.shadow_burst, 19)
         ancient(objs.spell_shadow_blitz, s.shadow_blitz_travel, s.shadow_blitz_impact, sy.shadow_blitz, 24)
@@ -541,6 +548,91 @@ class ElementalSpells @Inject constructor(private val objTypes: ObjTypeList) : S
             )
             manager.giveCombatXp(this, target, attack, damage)
             manager.queueMagicHit(this, target, spell, damage, clientDelay, serverDelay)
+            manager.continueCombatIfAutocast(this, target)
+        }
+
+        private fun UnpackedObjType?.castStrikeAnim(): SeqType =
+            if (this != null && isCategoryType(categories.staff)) {
+                staffAnim
+            } else {
+                unarmedAnim
+            }
+    }
+
+    /**
+     * Als [ElementalSpellAttack], maar met ancient secundaire effecten op een RAKE hit (geen splash):
+     *  - [bloodHeal]: geneest de caster met 25% van de toegebrachte schade (Blood-spells).
+     *  - [freezeTicks] > 0: bevriest een speler-doelwit zoveel ticks (Ice-spells), met immuniteit.
+     */
+    private class AncientSpellAttack(
+        private val manager: SpellAttackManager,
+        private val objTypes: ObjTypeList,
+        private val staffAnim: SeqType,
+        private val unarmedAnim: SeqType,
+        private val launch: SpotanimType,
+        private val travel: SpotanimType,
+        private val impact: SpotanimType,
+        private val castSound: SynthType,
+        private val hitSound: SynthType,
+        private val getMaxHit: (Int) -> Int,
+        private val freezeTicks: Int,
+        private val bloodHeal: Boolean,
+    ) : SpellAttack {
+        override suspend fun ProtectedAccess.attack(target: Npc, attack: CombatAttack.Spell) {
+            cast(target, attack)
+        }
+
+        override suspend fun ProtectedAccess.attack(target: Player, attack: CombatAttack.Spell) {
+            cast(target, attack)
+        }
+
+        private fun ProtectedAccess.cast(target: PathingEntity, attack: CombatAttack.Spell) {
+            val castResult = manager.attemptCast(this, attack)
+            if (castResult.isFailure()) {
+                return
+            }
+            val weaponType = objTypes.getOrNull(attack.weapon)
+            val castAnim = weaponType.castStrikeAnim()
+
+            anim(castAnim)
+            spotanim(launch, height = 92)
+
+            val proj = manager.spawnProjectile(this, target, travel, projanims.magic_spell)
+            val (serverDelay, clientDelay) = proj.durations
+            val spell = attack.spell.obj
+
+            val splash = manager.rollSplash(this, target, attack, castResult)
+            if (splash) {
+                manager.playSplashFx(this, target, clientDelay, castSound, soundRadius = 8)
+                manager.queueSplashHit(this, target, spell, clientDelay, serverDelay)
+                manager.continueCombatIfAutocast(this, target)
+                return
+            }
+
+            val baseMaxHit = getMaxHit(player.magicLvl)
+            val damage = manager.rollMaxHit(this, target, attack, castResult, baseMaxHit)
+            manager.playHitFx(
+                source = this,
+                target = target,
+                clientDelay = clientDelay,
+                castSound = castSound,
+                soundRadius = 8,
+                hitSpot = impact,
+                hitSpotHeight = 124,
+                hitSound = hitSound,
+            )
+            manager.giveCombatXp(this, target, attack, damage)
+            manager.queueMagicHit(this, target, spell, damage, clientDelay, serverDelay)
+
+            // Secundaire effecten - alleen op een rake hit (geen splash):
+            if (bloodHeal && damage > 0) {
+                statHeal(stats.hitpoints, constant = damage / 4, percent = 0)
+            }
+            if (freezeTicks > 0 && target is Player && FreezeState.canFreeze(target)) {
+                FreezeState.freeze(target, freezeTicks)
+                target.mes("You have been frozen!")
+            }
+
             manager.continueCombatIfAutocast(this, target)
         }
 

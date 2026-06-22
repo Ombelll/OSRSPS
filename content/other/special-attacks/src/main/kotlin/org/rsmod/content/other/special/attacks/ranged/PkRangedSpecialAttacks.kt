@@ -4,6 +4,7 @@ import org.rsmod.api.combat.commons.CombatAttack
 import org.rsmod.api.config.constants
 import org.rsmod.api.config.refs.objs
 import org.rsmod.api.config.refs.seqs
+import org.rsmod.api.config.refs.spotanims
 import org.rsmod.api.player.protect.ProtectedAccess
 import org.rsmod.api.specials.SpecialAttackManager
 import org.rsmod.api.specials.SpecialAttackMap
@@ -26,6 +27,41 @@ class PkRangedSpecialAttacks : SpecialAttackMap {
         registerRanged(objs.toxic_blowpipe_loaded, blowpipe)
         registerRanged(objs.toxic_blowpipe_ornament, blowpipe)
         registerRanged(objs.toxic_blowpipe_loaded_ornament, blowpipe)
+
+        registerRanged(objs.heavy_ballista, HeavyBallista(manager))
+    }
+
+    /** Heavy ballista "Concentrated Shot": verhoogde accuracy + damage, enkele hit. */
+    private class HeavyBallista(private val manager: SpecialAttackManager) : RangedSpecialAttack {
+        override suspend fun ProtectedAccess.attack(target: Npc, attack: CombatAttack.Ranged) =
+            shot(target, attack)
+
+        override suspend fun ProtectedAccess.attack(target: Player, attack: CombatAttack.Ranged) =
+            shot(target, attack)
+
+        private fun ProtectedAccess.shot(
+            target: PathingEntity,
+            attack: CombatAttack.Ranged,
+        ): Boolean {
+            anim(seqs.human_bow)
+            spotanim(
+                spot = spotanims.ballista_special,
+                slot = constants.spotanim_slot_combat,
+                height = 96,
+            )
+            val damage =
+                manager.rollRangedDamage(
+                    source = this,
+                    target = target,
+                    attack = attack,
+                    accuracyMultiplier = 1.25,
+                    maxHitMultiplier = 1.25,
+                )
+            manager.giveCombatXp(this, target, attack, damage)
+            manager.queueRangedHit(this, target, ammo = null, damage = damage, clientDelay = 30)
+            manager.continueCombat(this, target)
+            return true
+        }
     }
 
     private class MagicShortbow(private val manager: SpecialAttackManager) : RangedSpecialAttack {

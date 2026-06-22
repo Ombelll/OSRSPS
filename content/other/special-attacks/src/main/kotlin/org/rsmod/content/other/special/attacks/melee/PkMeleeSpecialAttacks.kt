@@ -5,6 +5,8 @@ import org.rsmod.api.combat.commons.types.MeleeAttackType
 import org.rsmod.api.config.constants
 import org.rsmod.api.config.refs.objs
 import org.rsmod.api.config.refs.spotanims
+import org.rsmod.api.player.hit.modifier.NoopPlayerHitModifier
+import org.rsmod.api.player.hit.queueHit
 import org.rsmod.api.player.protect.ProtectedAccess
 import org.rsmod.api.specials.SpecialAttackManager
 import org.rsmod.api.specials.SpecialAttackMap
@@ -15,6 +17,7 @@ import org.rsmod.content.other.special.attacks.configs.special_spots
 import org.rsmod.game.entity.Npc
 import org.rsmod.game.entity.PathingEntity
 import org.rsmod.game.entity.Player
+import org.rsmod.game.hit.HitType
 import org.rsmod.game.type.seq.SeqType
 import org.rsmod.game.type.spot.SpotanimType
 
@@ -88,6 +91,46 @@ class PkMeleeSpecialAttacks : SpecialAttackMap {
                 blockType = MeleeAttackType.Stab,
             ),
         )
+
+        registerMelee(objs.voidwaker, Voidwaker(manager))
+    }
+
+    /**
+     * Voidwaker-spec: gegarandeerde hit van 50%-150% van de normale max hit, die door
+     * protect-prayers heen gaat (alleen tegen spelers). 50% energie (uit de wapen-config).
+     */
+    private class Voidwaker(private val manager: SpecialAttackManager) : MeleeSpecialAttack {
+        override suspend fun ProtectedAccess.attack(target: Npc, attack: CombatAttack.Melee) =
+            slash(target, attack, bypassPrayer = false)
+
+        override suspend fun ProtectedAccess.attack(target: Player, attack: CombatAttack.Melee) =
+            slash(target, attack, bypassPrayer = true)
+
+        private fun ProtectedAccess.slash(
+            target: PathingEntity,
+            attack: CombatAttack.Melee,
+            bypassPrayer: Boolean,
+        ): Boolean {
+            anim(special_seqs.voidwaker)
+            spotanim(
+                spot = special_spots.voidwaker,
+                slot = constants.spotanim_slot_combat,
+                height = 96,
+            )
+            // Gegarandeerde hit (geen accuracy-roll): 50%-150% van de normale max hit.
+            val max = manager.calculateMeleeMaxHit(this, target, attack.type, attack.style, 1.0)
+            val roll = manager.rollMeleeMaxHit(this, target, attack.type, attack.style, 1.0)
+            val damage = max / 2 + roll
+            manager.giveCombatXp(this, target, attack, damage)
+            if (bypassPrayer && target is Player) {
+                // Voidwaker negeert protect-prayers: deal de hit ongemodificeerd.
+                target.queueHit(player, 1, HitType.Melee, damage, modifier = NoopPlayerHitModifier)
+            } else {
+                manager.queueMeleeHit(this, target, damage)
+            }
+            manager.continueCombat(this, target)
+            return true
+        }
     }
 
     private class SingleHit(

@@ -19,6 +19,7 @@ import org.rsmod.api.player.vars.VarPlayerIntMapSetter
 import org.rsmod.api.player.vars.resyncVar
 import org.rsmod.api.player.stat.baseHitpointsLvl
 import org.rsmod.api.player.stat.hitpoints
+import org.rsmod.api.player.stat.prayerLvl
 import org.rsmod.api.player.torso
 import org.rsmod.api.random.GameRandom
 import org.rsmod.game.headbar.Headbar
@@ -47,6 +48,7 @@ public object StandardPlayerHitProcessor : QueuedPlayerHitProcessor {
         }
 
         processVengeanceRebound(hit, damage)
+        processSmite(hit, damage)
 
         playDefendSound(hit, random)
 
@@ -85,6 +87,24 @@ public object StandardPlayerHitProcessor : QueuedPlayerHitProcessor {
             }
         }
         player.mes("Taste vengeance!")
+    }
+
+    /**
+     * Smite-prayer: als de aanvaller (een speler) Smite aan heeft en daadwerkelijk schade doet,
+     * verliest dit doelwit prayer-punten gelijk aan 25% van die schade.
+     */
+    private fun ProtectedAccess.processSmite(hit: Hit, damage: Int) {
+        if (damage <= 0 || !hit.isFromPlayer) {
+            return
+        }
+        val attacker = findHitPlayerSource(hit) ?: return
+        if (attacker.vars[varbits.smite] != 1) {
+            return
+        }
+        val drain = damage / 4
+        if (drain > 0 && player.prayerLvl > 0) {
+            statSub(stats.prayer, constant = drain, percent = 0)
+        }
     }
 
     private fun Hit.isValid(access: ProtectedAccess): Boolean {

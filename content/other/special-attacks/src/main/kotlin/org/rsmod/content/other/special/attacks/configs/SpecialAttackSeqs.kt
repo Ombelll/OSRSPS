@@ -30,4 +30,5 @@ object SpecialAttackSeqs : SeqReferences() {
     val osmumtens_fang = find("human_osmumtens_fang")
     val abyssal_dagger = find("abyssal_dagger_special")
     val toxic_blowpipe = find("toxic_blowpipe_special_updated")
+    val voidwaker = find("human_special_voidwaker")
 }

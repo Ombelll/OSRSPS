@@ -15,4 +15,5 @@ object SpecialAttackSpotanims : SpotanimReferences() {
     val dragon_warhammer = find("dragon_warhammer_sa_spotanim")
     val abyssal_dagger = find("abyssal_dagger_special_spotanim")
     val toxic_blowpipe = find("toxic_blowpipe_specialattack")
+    val voidwaker = find("fx_voidwaker02_special")
 }
