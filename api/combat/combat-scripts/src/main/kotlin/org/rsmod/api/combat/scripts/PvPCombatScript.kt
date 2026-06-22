@@ -15,21 +15,59 @@ import org.rsmod.api.combat.player.resolveCombatAttack
 import org.rsmod.api.combat.weapon.styles.AttackStyles
 import org.rsmod.api.combat.weapon.types.AttackTypes
 import org.rsmod.api.config.refs.categories
+import org.rsmod.api.config.refs.objs
 import org.rsmod.api.config.refs.queues
 import org.rsmod.api.config.refs.varbits
+import org.rsmod.api.config.refs.walktriggers
 import org.rsmod.api.player.isInPvpCombat
+import org.rsmod.api.player.output.mes
 import org.rsmod.api.player.protect.ProtectedAccess
 import org.rsmod.api.player.righthand
 import org.rsmod.api.player.vars.boolVarBit
 import org.rsmod.api.script.advanced.onApPlayer2
 import org.rsmod.api.script.advanced.onOpPlayer2
 import org.rsmod.api.script.onApPlayerT
+import org.rsmod.api.script.onPlayerWalkTrigger
 import org.rsmod.api.spells.MagicSpellRegistry
 import org.rsmod.api.spells.autocast.AutocastWeapons
 import org.rsmod.game.entity.Player
+import org.rsmod.game.type.comp.ComponentType
 import org.rsmod.game.type.obj.ObjTypeList
 import org.rsmod.plugin.scripts.PluginScript
 import org.rsmod.plugin.scripts.ScriptContext
+
+/**
+ * Freeze-state voor ice-spells (Ice Rush/Burst/Blitz/Barrage). Houdt per speler bij tot welke
+ * game-tick hij bevroren is en tot wanneer hij immuun is (kan dan niet meteen herbevroren worden).
+ * Bewegingsblokkering loopt via de [walktriggers.pvp_frozen] walk-trigger in [PvPCombatScript].
+ */
+internal object FreezeState {
+    private val frozenUntil = HashMap<Int, Int>()
+    private val immuneUntil = HashMap<Int, Int>()
+
+    fun isFrozen(player: Player): Boolean {
+        val until = frozenUntil[player.slotId] ?: return false
+        return player.currentMapClock < until
+    }
+
+    /** Mag [player] nu bevroren worden? (Niet al bevroren en niet in de immuniteitsperiode.) */
+    fun canFreeze(player: Player): Boolean {
+        if (isFrozen(player)) {
+            return false
+        }
+        val immune = immuneUntil[player.slotId] ?: return true
+        return player.currentMapClock >= immune
+    }
+
+    fun freeze(target: Player, durationTicks: Int) {
+        val now = target.currentMapClock
+        frozenUntil[target.slotId] = now + durationTicks
+        // Immuniteit = duur van de freeze erna (OSRS-stijl), zodat je niet eindeloos vastgezet wordt.
+        immuneUntil[target.slotId] = now + durationTicks + durationTicks
+        target.walkTrigger(walktriggers.pvp_frozen)
+        target.abortRoute()
+    }
+}
 
 internal class PvPCombatScript
 @Inject
@@ -46,12 +84,47 @@ constructor(
     private val pvpWorld = System.getenv("RSMOD_WORLD") == "2"
     private var Player.skullPrevention by boolVarBit(varbits.skull_prevent)
 
+    // Ice-spell-component -> freeze-duur in ticks. Opgebouwd bij startup uit de spell-registry.
+    private var iceFreezeDurations: Map<ComponentType, Int> = emptyMap()
+
     override fun ScriptContext.startup() {
         onApPlayer2 { attemptCombatAp(it.target) }
         onOpPlayer2 { attemptCombatOp(it.target) }
         for (spell in spells.combatSpells()) {
             onApPlayerT(spell.component) { attemptCombatSpell(it.target, spell) }
         }
+        iceFreezeDurations = buildIceFreezeDurations()
+        // Blokkeer beweging zolang bevroren; de walk-trigger self-cleart na afloop (eerste move).
+        onPlayerWalkTrigger(walktriggers.pvp_frozen) {
+            if (FreezeState.isFrozen(player)) {
+                player.abortRoute()
+            } else {
+                player.clearWalkTrigger()
+            }
+        }
+    }
+
+    private fun buildIceFreezeDurations(): Map<ComponentType, Int> {
+        val tiers =
+            listOf(
+                objs.spell_ice_rush to 8, // ~5s
+                objs.spell_ice_burst to 16, // ~10s
+                objs.spell_ice_blitz to 24, // ~15s
+                objs.spell_ice_barrage to 32, // ~20s
+            )
+        return tiers
+            .mapNotNull { (obj, ticks) -> spells.getObjSpell(obj)?.component?.let { it to ticks } }
+            .toMap()
+    }
+
+    /** Bevriest [target] als [spell] een ice-spell is (en het doelwit niet al bevroren/immuun is). */
+    private fun applyIceFreeze(spell: MagicSpell, target: Player) {
+        val duration = iceFreezeDurations[spell.component] ?: return
+        if (!FreezeState.canFreeze(target)) {
+            return
+        }
+        FreezeState.freeze(target, duration)
+        target.mes("You have been frozen!")
     }
 
     private suspend fun ProtectedAccess.attemptCombatAp(target: Player) {
@@ -80,6 +153,7 @@ constructor(
         val spell = resolveAutocastSpell(objTypes, spells, runes, autocast)
         val attack = resolveCombatAttack(player.righthand, type, style, spell)
         combat.attack(this, target, attack)
+        spell?.let { applyIceFreeze(it, target) }
     }
 
     private suspend fun ProtectedAccess.attemptCombatOp(target: Player) {
@@ -92,6 +166,7 @@ constructor(
         val spell = resolveAutocastSpell(objTypes, spells, runes, autocast)
         val attack = resolveCombatAttack(player.righthand, type, style, spell)
         combat.attack(this, target, attack)
+        spell?.let { applyIceFreeze(it, target) }
     }
 
     private suspend fun ProtectedAccess.attemptCombatSpell(target: Player, spell: MagicSpell) {
@@ -108,6 +183,7 @@ constructor(
         // away, which is the same as the default engine valid-ap range.
         val attack = resolveCombatAttack(player.righthand, null, null, spell)
         combat.attack(this, target, attack)
+        applyIceFreeze(spell, target)
     }
 
     private fun ProtectedAccess.canAttack(target: Player): Boolean {

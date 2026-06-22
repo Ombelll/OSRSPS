@@ -182,6 +182,11 @@ internal object PkObjs : ObjReferences() {
     val void_melee_helm = find("game_pest_melee_helm")
     val void_ranger_helm = find("game_pest_archer_helm")
     val void_mage_helm = find("game_pest_mage_helm")
+    // --- Spec-weapons ---
+    val darkbow = find("darkbow")
+    val heavy_ballista = find("heavy_ballista")
+    val dragon_javelin = find("dragon_javelin")
+    val voidwaker = find("voidwaker")
     // --- Supplies ---
     val shark = find("shark")
     val lobster = find("lobster")
@@ -320,6 +325,7 @@ internal object PkMeleeShopBuilder : InvBuilder() {
                     PkObjs.justiciar_leg_guards,
                     PkObjs.serpentine_helm,
                     PkObjs.torture,
+                    PkObjs.voidwaker,
                     // Elite Void (volledige set):
                     PkObjs.elite_void_top,
                     PkObjs.elite_void_robes,
@@ -369,6 +375,10 @@ internal object PkRangedShopBuilder : InvBuilder() {
             stock += stock(PkObjs.dragon_knife, count = 5000, restockCycles = 5)
             stock += stock(PkObjs.dragon_dart, count = 10000, restockCycles = 5)
             stock += stock(PkObjs.dragon_arrow, count = 10000, restockCycles = 5)
+            // Spec-weapons:
+            stock += stock(PkObjs.darkbow, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.heavy_ballista, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.dragon_javelin, count = 10000, restockCycles = 5)
             // Elite Void (volledige set):
             stock += stock(PkObjs.elite_void_top, count = 100, restockCycles = 25)
             stock += stock(PkObjs.elite_void_robes, count = 100, restockCycles = 25)
