@@ -1143,11 +1143,15 @@ constructor(
         spell: ObjType,
         spellbook: Spellbook?,
         sunfireRune: Boolean,
-    ): Boolean =
-        when (target) {
+    ): Boolean {
+        if (target.isMaxHitDummy()) {
+            return true // max-hit dummy splasht nooit
+        }
+        return when (target) {
             is Npc -> rollSpellAccuracy(source, target, spell, spellbook, sunfireRune)
             is Player -> rollSpellAccuracy(source, target, spell, spellbook, sunfireRune)
         }
+    }
 
     private fun rollSpellAccuracy(
         source: Player,
@@ -1219,6 +1223,9 @@ constructor(
                 attackRate = attackRate,
                 sunfireRune = sunfireRune,
             )
+        if (target.isMaxHitDummy()) {
+            return hitRange.last // max-hit dummy toont altijd je max magic hit
+        }
         return random.of(hitRange)
     }
 
