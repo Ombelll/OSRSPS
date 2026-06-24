@@ -21,6 +21,7 @@ import org.rsmod.api.combat.commons.types.MeleeAttackType
 import org.rsmod.api.combat.commons.types.RangedAttackType
 import org.rsmod.api.combat.formulas.AccuracyFormulae
 import org.rsmod.api.combat.formulas.MaxHitFormulae
+import org.rsmod.api.config.refs.npcs
 import org.rsmod.api.config.refs.params
 import org.rsmod.api.config.refs.spotanims
 import org.rsmod.api.config.refs.stats
@@ -482,6 +483,11 @@ constructor(
 
     public fun isForcedMaxHit(player: Player): Boolean = player.slotId in forcedMaxHit
 
+    // Max-hit dummy (hub): elke melee/ranged hit erop doet gegarandeerd max (geen miss, geen variatie),
+    // zodat je je max hit met verschillende gear/specs kunt aflezen.
+    private fun PathingEntity.isMaxHitDummy(): Boolean =
+        this is Npc && id == npcs.test_combat_dummy_maxhit.id
+
     public fun rollMeleeDamage(
         source: Player,
         target: PathingEntity,
@@ -492,7 +498,7 @@ constructor(
         attackStyle: MeleeAttackStyle? = attack.style,
         blockType: MeleeAttackType? = attack.type,
     ): Int {
-        if (source.slotId in forcedMaxHit) {
+        if (source.slotId in forcedMaxHit || target.isMaxHitDummy()) {
             return calculateMeleeMaxHit(source, target, attackType, attackStyle, maxHitMultiplier)
         }
         val successfulAccuracyRoll =
@@ -741,7 +747,7 @@ constructor(
         blockType: RangedAttackType? = attack.type,
         boltSpecDamage: Int = 0,
     ): Int {
-        if (source.slotId in forcedMaxHit) {
+        if (source.slotId in forcedMaxHit || target.isMaxHitDummy()) {
             return calculateRangedMaxHit(
                 source,
                 target,
