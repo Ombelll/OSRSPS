@@ -155,19 +155,51 @@ class Eating @Inject constructor() : PluginScript() {
         }
     }
 
+    // Per-speler consumptie-cooldowns (game-tick tot wanneer je weer mag). Food, karambwan en
+    // potions hebben elk een EIGEN 3-tick delay, zodat combo-eten kan (food + karambwan + sip op
+    // dezelfde tick) maar spam-eten niet. Elke consumptie stelt ook je volgende aanval 3 ticks uit.
+    private val foodDelay = HashMap<Int, Int>()
+    private val karamDelay = HashMap<Int, Int>()
+    private val potionDelay = HashMap<Int, Int>()
+
     private fun ProtectedAccess.eat(food: FoodItem) {
+        val now = player.currentMapClock
+        val delays = if (food.obj == FoodObjs.karambwan) karamDelay else foodDelay
+        if (now < (delays[player.slotId] ?: 0)) {
+            return // nog op cooldown -> klik negeren (geen dubbel-eten)
+        }
         invDel(inv, food.obj, 1)
         statHeal(stats.hitpoints, constant = food.heal, percent = 0)
+        delays[player.slotId] = now + EAT_DELAY
+        delayNextAttack(now)
         mes("You eat the ${food.name}. It heals ${food.heal} hitpoints.")
     }
 
     private fun ProtectedAccess.drink(potion: Potion, dose: ObjType) {
+        val now = player.currentMapClock
+        if (now < (potionDelay[player.slotId] ?: 0)) {
+            return // nog op cooldown
+        }
         val index = potion.doses.indexOf(dose)
         invDel(inv, dose, 1)
         val next =
             if (index in 0 until potion.doses.size - 1) potion.doses[index + 1] else FoodObjs.vial_empty
         invAdd(inv, next)
         potion.effect(this)
+        potionDelay[player.slotId] = now + EAT_DELAY
+        delayNextAttack(now)
         mes(potion.message)
+    }
+
+    /** Eten/drinken stelt je volgende aanval [EAT_DELAY] ticks uit (verlengt nooit een langere delay). */
+    private fun ProtectedAccess.delayNextAttack(now: Int) {
+        val target = now + EAT_DELAY
+        if (actionDelay < target) {
+            actionDelay = target
+        }
+    }
+
+    private companion object {
+        private const val EAT_DELAY = 3
     }
 }
