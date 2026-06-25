@@ -75,16 +75,18 @@ public object StandardPlayerHitProcessor : QueuedPlayerHitProcessor {
         if (player.vars[varbits.vengeance_rebound] == 0) {
             return
         }
-        // Verbruik de lading.
+        // Alleen tegen een speler-aanvaller: verbruik de lading niet bij npc-schade.
+        val attacker = if (hit.isFromPlayer) findHitPlayerSource(hit) else null
+        if (attacker == null) {
+            return
+        }
+        // Verbruik de lading en kaats 75% terug.
         VarPlayerIntMapSetter.set(player, varbits.vengeance_rebound, 0)
         player.resyncVar(varbits.vengeance_rebound)
 
-        val attacker = if (hit.isFromPlayer) findHitPlayerSource(hit) else null
-        if (attacker != null) {
-            val reflect = damage * 3 / 4
-            if (reflect > 0) {
-                attacker.queueHit(player, 1, HitType.Melee, reflect, modifier = NoopPlayerHitModifier)
-            }
+        val reflect = damage * 3 / 4
+        if (reflect > 0) {
+            attacker.queueHit(player, 1, HitType.Melee, reflect, modifier = NoopPlayerHitModifier)
         }
         player.mes("Taste vengeance!")
     }
