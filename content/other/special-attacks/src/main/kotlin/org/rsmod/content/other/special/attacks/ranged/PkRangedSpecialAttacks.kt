@@ -29,6 +29,8 @@ class PkRangedSpecialAttacks : SpecialAttackMap {
         registerRanged(objs.toxic_blowpipe_loaded_ornament, blowpipe)
 
         registerRanged(objs.heavy_ballista, HeavyBallista(manager))
+        // Morrigan's javelin: forse thrown-spec (hergebruikt de single-hit ranged-spec).
+        registerRanged(objs.morrigans_javelin, HeavyBallista(manager))
     }
 
     /** Heavy ballista "Concentrated Shot": verhoogde accuracy + damage, enkele hit. */

@@ -5,6 +5,7 @@ import org.rsmod.api.combat.commons.types.MeleeAttackType
 import org.rsmod.api.config.constants
 import org.rsmod.api.config.refs.objs
 import org.rsmod.api.config.refs.spotanims
+import org.rsmod.api.config.refs.stats
 import org.rsmod.api.player.hit.modifier.NoopPlayerHitModifier
 import org.rsmod.api.player.hit.queueHit
 import org.rsmod.api.player.protect.ProtectedAccess
@@ -93,6 +94,59 @@ class PkMeleeSpecialAttacks : SpecialAttackMap {
         )
 
         registerMelee(objs.voidwaker, Voidwaker(manager))
+
+        // Vesta's longsword: sterke slash-spec.
+        registerMelee(
+            objs.vestas_longsword,
+            SingleHit(
+                manager = manager,
+                seq = special_seqs.dragon_longsword,
+                spot = special_spots.dragon_longsword,
+                accuracyMultiplier = 1.25,
+                maxHitMultiplier = 1.2,
+                blockType = MeleeAttackType.Slash,
+            ),
+        )
+
+        registerMelee(objs.statius_warhammer, StatiusWarhammer(manager))
+    }
+
+    /**
+     * Statius's warhammer "Smash": forse crush-spec (boost accuracy + damage) die de aanvaller
+     * geneest met 25% van de toegebrachte schade. (Defence-verlaging is target-side en nog niet
+     * gewired, net als bij Dragon warhammer.)
+     */
+    private class StatiusWarhammer(private val manager: SpecialAttackManager) : MeleeSpecialAttack {
+        override suspend fun ProtectedAccess.attack(target: Npc, attack: CombatAttack.Melee) =
+            smash(target, attack)
+
+        override suspend fun ProtectedAccess.attack(target: Player, attack: CombatAttack.Melee) =
+            smash(target, attack)
+
+        private fun ProtectedAccess.smash(target: PathingEntity, attack: CombatAttack.Melee): Boolean {
+            anim(special_seqs.dragon_warhammer)
+            spotanim(
+                spot = special_spots.dragon_warhammer,
+                slot = constants.spotanim_slot_combat,
+                height = 96,
+            )
+            val damage =
+                manager.rollMeleeDamage(
+                    source = this,
+                    target = target,
+                    attack = attack,
+                    accuracyMultiplier = 1.5,
+                    maxHitMultiplier = 1.5,
+                    blockType = MeleeAttackType.Crush,
+                )
+            manager.giveCombatXp(this, target, attack, damage)
+            manager.queueMeleeHit(this, target, damage)
+            if (damage > 0) {
+                statHeal(stats.hitpoints, constant = damage / 4, percent = 0)
+            }
+            manager.continueCombat(this, target)
+            return true
+        }
     }
 
     /**

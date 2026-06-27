@@ -187,6 +187,24 @@ internal object PkObjs : ObjReferences() {
     val heavy_ballista = find("heavy_ballista")
     val dragon_javelin = find("dragon_javelin")
     val voidwaker = find("voidwaker")
+    // --- PvP-armour (Statius/Vesta/Morrigan/Zuriel) ---
+    val statius_warhammer = find("statius_warhammer")
+    val statius_full_helm = find("statius_full_helm")
+    val statius_platebody = find("statius_platebody")
+    val statius_platelegs = find("statius_platelegs")
+    val vestas_spear = find("vestas_spear")
+    val vestas_longsword = find("vestas_longsword")
+    val vestas_chainbody = find("vestas_chainbody")
+    val vestas_plateskirt = find("vestas_plateskirt")
+    val morrigans_thrownaxe = find("morrigans_thrownaxe")
+    val morrigans_javelin = find("morrigans_javelin")
+    val morrigans_coif = find("morrigans_coif")
+    val morrigans_leather_body = find("morrigans_leather_body")
+    val morrigans_leather_chaps = find("morrigans_leather_chaps")
+    val zuriels_staff = find("zuriels_staff")
+    val zuriels_hood = find("zuriels_hood")
+    val zuriels_robe_top = find("zuriels_robe_top")
+    val zuriels_robe_bottom = find("zuriels_robe_bottom")
     // --- Supplies ---
     val shark = find("shark")
     val lobster = find("lobster")
@@ -326,6 +344,15 @@ internal object PkMeleeShopBuilder : InvBuilder() {
                     PkObjs.serpentine_helm,
                     PkObjs.torture,
                     PkObjs.voidwaker,
+                    // PvP-armour - Statius + Vesta:
+                    PkObjs.statius_warhammer,
+                    PkObjs.statius_full_helm,
+                    PkObjs.statius_platebody,
+                    PkObjs.statius_platelegs,
+                    PkObjs.vestas_spear,
+                    PkObjs.vestas_longsword,
+                    PkObjs.vestas_chainbody,
+                    PkObjs.vestas_plateskirt,
                     // Elite Void (volledige set):
                     PkObjs.elite_void_top,
                     PkObjs.elite_void_robes,
@@ -379,6 +406,12 @@ internal object PkRangedShopBuilder : InvBuilder() {
             stock += stock(PkObjs.darkbow, count = 100, restockCycles = 25)
             stock += stock(PkObjs.heavy_ballista, count = 100, restockCycles = 25)
             stock += stock(PkObjs.dragon_javelin, count = 10000, restockCycles = 5)
+            // PvP-armour - Morrigan:
+            stock += stock(PkObjs.morrigans_thrownaxe, count = 10000, restockCycles = 5)
+            stock += stock(PkObjs.morrigans_javelin, count = 10000, restockCycles = 5)
+            stock += stock(PkObjs.morrigans_coif, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.morrigans_leather_body, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.morrigans_leather_chaps, count = 100, restockCycles = 25)
             // Elite Void (volledige set):
             stock += stock(PkObjs.elite_void_top, count = 100, restockCycles = 25)
             stock += stock(PkObjs.elite_void_robes, count = 100, restockCycles = 25)
@@ -436,6 +469,11 @@ internal object PkMagicShopBuilder : InvBuilder() {
                     PkObjs.void_mage_helm,
                     PkObjs.void_melee_helm,
                     PkObjs.void_ranger_helm,
+                    // PvP-armour - Zuriel:
+                    PkObjs.zuriels_staff,
+                    PkObjs.zuriels_hood,
+                    PkObjs.zuriels_robe_top,
+                    PkObjs.zuriels_robe_bottom,
                 )
             for (obj in gear) {
                 stock += stock(obj, count = 100, restockCycles = 25)
