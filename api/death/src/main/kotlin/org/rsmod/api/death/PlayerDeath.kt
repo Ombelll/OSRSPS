@@ -113,6 +113,11 @@ constructor(
             "You were killed by ${killer.displayName}." +
                 if (victimStreakLost > 1) " Your streak of $victimStreakLost is over!" else ""
         )
+        // Kill-feed: elke kill naar alle online spelers (extra melding bij een bounty-claim).
+        val bountyNote = if (result.bountyClaimed) " [BOUNTY CLAIMED! +bonus]" else ""
+        for (online in players) {
+            online.mes("[PK] ${killer.displayName} killed ${victim.displayName}!$bountyNote")
+        }
         // Broadcast bij streak-mijlpalen (5, 10, 15, ...).
         if (result.streak >= 5 && result.streak % 5 == 0) {
             for (online in players) {

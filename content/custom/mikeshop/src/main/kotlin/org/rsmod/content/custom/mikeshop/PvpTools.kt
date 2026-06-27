@@ -16,6 +16,7 @@ import org.rsmod.api.player.vars.intVarp
 import org.rsmod.api.script.onCommand
 import org.rsmod.api.script.onPlayerLogin
 import org.rsmod.game.entity.Player
+import org.rsmod.game.type.obj.ObjTypeList
 import org.rsmod.game.type.stat.StatTypeList
 import org.rsmod.map.CoordGrid
 import org.rsmod.plugin.scripts.PluginScript
@@ -30,6 +31,7 @@ class PvpTools
 constructor(
     private val protectedAccess: ProtectedAccessLauncher,
     private val statTypes: StatTypeList,
+    private val objTypes: ObjTypeList,
 ) : PluginScript() {
     private val pvpWorld = System.getenv("RSMOD_WORLD") == "2"
     private var Player.specialAttackType by intVarp(varps.sa_attack)
@@ -75,6 +77,41 @@ constructor(
                 if (!player.requirePvpWorld()) return@cheat
                 player.resetFightState()
                 player.mes("Fight reset: HP, prayer, stats, spec, skull and teleblock restored.")
+            }
+        }
+
+        onCommand("risk") {
+            desc = "Toon de geschatte waarde van je gedragen + inventory items (wat je riskeert)"
+            cheat {
+                var total = 0L
+                for (slot in player.inv.indices) {
+                    val obj = player.inv[slot] ?: continue
+                    total += objTypes[obj].cost.toLong() * obj.count.coerceAtLeast(1)
+                }
+                for (slot in player.worn.indices) {
+                    val obj = player.worn[slot] ?: continue
+                    total += objTypes[obj].cost.toLong() * obj.count.coerceAtLeast(1)
+                }
+                player.mes("Je riskeert momenteel ongeveer ${"%,d".format(total)} gp aan items.")
+            }
+        }
+
+        onCommand("wildlevel") {
+            desc = "Toon je huidige Wilderness-level"
+            cheat {
+                val x = player.coords.x
+                val z = player.coords.z
+                val level =
+                    if (x in 2944..3391 && z in 3520..4351) {
+                        (((z - 3520) / 8) + 1).coerceIn(1, 56)
+                    } else {
+                        0
+                    }
+                if (level == 0) {
+                    player.mes("Je bent niet in de Wilderness (veilig gebied).")
+                } else {
+                    player.mes("Wilderness level: $level.")
+                }
             }
         }
 

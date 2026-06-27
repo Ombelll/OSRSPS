@@ -19,11 +19,25 @@ public class PvpKillTracker {
         val bestStreak: Int,
         val gained: Int,
         val farmed: Boolean,
+        val bountyClaimed: Boolean,
     )
 
     private val streaks = ConcurrentHashMap<String, Int>()
     private val bestStreaks = ConcurrentHashMap<String, Int>()
     private val farm = ConcurrentHashMap<String, FarmEntry>()
+
+    // Bounty-target: killer-key (lowercase) -> target display-naam. Killen van je target geeft bonus.
+    private val bountyTargets = ConcurrentHashMap<String, String>()
+
+    public fun setBounty(player: String, target: String) {
+        bountyTargets[player.lowercase()] = target
+    }
+
+    public fun bountyTarget(player: String): String? = bountyTargets[player.lowercase()]
+
+    public fun clearBounty(player: String) {
+        bountyTargets.remove(player.lowercase())
+    }
 
     private class FarmEntry(var count: Int, var lastMs: Long)
 
@@ -56,12 +70,21 @@ public class PvpKillTracker {
         val base = (4 + (newStreak - 1)).coerceAtMost(10)
         val milestoneBonus = if (newStreak % 5 == 0) newStreak else 0
         val farmed = entry.count > 1
-        val gained =
+        val baseGained =
             when {
                 entry.count == 1 -> base + milestoneBonus
                 entry.count <= 3 -> max(1, base / 2)
                 else -> 1
             }
+
+        // Bounty: was dit slachtoffer het aangewezen target van de killer? -> bonus + claim wissen.
+        val target = bountyTargets[key]
+        val bountyClaimed = target != null && target.equals(victim, ignoreCase = true)
+        if (bountyClaimed) {
+            bountyTargets.remove(key)
+        }
+        val gained = baseGained + if (bountyClaimed) BOUNTY_BONUS else 0
+
         return KillResult(
             kills = currentKills + 1,
             points = currentPoints + gained,
@@ -69,6 +92,7 @@ public class PvpKillTracker {
             bestStreak = best,
             gained = gained,
             farmed = farmed,
+            bountyClaimed = bountyClaimed,
         )
     }
 
@@ -86,5 +110,6 @@ public class PvpKillTracker {
 
     private companion object {
         private const val FARM_DECAY_MS = 120_000L
+        private const val BOUNTY_BONUS = 10
     }
 }
