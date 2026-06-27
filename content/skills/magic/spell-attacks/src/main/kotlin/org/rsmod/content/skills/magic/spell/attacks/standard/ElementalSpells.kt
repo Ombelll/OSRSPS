@@ -5,6 +5,7 @@ import org.rsmod.api.combat.commons.CombatAttack
 import org.rsmod.api.combat.manager.FreezeState
 import org.rsmod.api.combat.manager.MagicRuneManager.Companion.isFailure
 import org.rsmod.api.config.refs.categories
+import org.rsmod.api.config.refs.npcs
 import org.rsmod.api.config.refs.objs
 import org.rsmod.api.config.refs.stats
 import org.rsmod.api.config.refs.projanims
@@ -625,7 +626,9 @@ class ElementalSpells @Inject constructor(private val objTypes: ObjTypeList) : S
             manager.queueMagicHit(this, target, spell, damage, clientDelay, serverDelay)
 
             // Secundaire effecten - alleen op een rake hit (geen splash):
-            if (bloodHeal && damage > 0) {
+            // Niet tegen de max-hit dummy: die geeft altijd max damage = gratis heal-exploit.
+            val isDummy = target is Npc && target.id == npcs.test_combat_dummy_maxhit.id
+            if (bloodHeal && damage > 0 && !isDummy) {
                 statHeal(stats.hitpoints, constant = damage / 4, percent = 0)
             }
             if (freezeTicks > 0 && target is Player && FreezeState.canFreeze(target)) {

@@ -45,10 +45,17 @@ constructor(private val npcRepo: NpcRepository, private val npcTypes: NpcTypeLis
         try {
             val npc = Npc(npcTypes[npcs.test_combat_dummy_maxhit], dummyCoord)
             npc.mode = NpcMode.None
+            // Zeer hoge HP zodat de dummy niet sneuvelt door je max hits en permanent blijft staan.
+            npc.baseHitpointsLvl = DUMMY_HP
+            npc.hitpoints = DUMMY_HP
             npcRepo.add(npc, duration = Int.MAX_VALUE)
         } catch (e: Exception) {
             // Tegel geblokkeerd / npc niet plaatsbaar -> sla over, crash de server niet.
         }
+    }
+
+    private companion object {
+        private const val DUMMY_HP = 1_000_000
     }
 }
 
