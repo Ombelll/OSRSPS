@@ -205,6 +205,10 @@ internal object PkObjs : ObjReferences() {
     val zuriels_hood = find("zuriels_hood")
     val zuriels_robe_top = find("zuriels_robe_top")
     val zuriels_robe_bottom = find("zuriels_robe_bottom")
+    // --- Revenant/wilderness weapons (+50% damage in de wild) ---
+    val webweaver_bow = find("wild_cave_webweaver_charged")
+    val ursine_chainmace = find("wild_cave_ursine_charged")
+    val accursed_sceptre = find("wild_cave_accursed_charged")
     // --- Supplies ---
     val shark = find("shark")
     val lobster = find("lobster")
@@ -353,6 +357,7 @@ internal object PkMeleeShopBuilder : InvBuilder() {
                     PkObjs.vestas_longsword,
                     PkObjs.vestas_chainbody,
                     PkObjs.vestas_plateskirt,
+                    PkObjs.ursine_chainmace,
                     // Elite Void (volledige set):
                     PkObjs.elite_void_top,
                     PkObjs.elite_void_robes,
@@ -412,6 +417,7 @@ internal object PkRangedShopBuilder : InvBuilder() {
             stock += stock(PkObjs.morrigans_coif, count = 100, restockCycles = 25)
             stock += stock(PkObjs.morrigans_leather_body, count = 100, restockCycles = 25)
             stock += stock(PkObjs.morrigans_leather_chaps, count = 100, restockCycles = 25)
+            stock += stock(PkObjs.webweaver_bow, count = 100, restockCycles = 25)
             // Elite Void (volledige set):
             stock += stock(PkObjs.elite_void_top, count = 100, restockCycles = 25)
             stock += stock(PkObjs.elite_void_robes, count = 100, restockCycles = 25)
@@ -474,6 +480,7 @@ internal object PkMagicShopBuilder : InvBuilder() {
                     PkObjs.zuriels_hood,
                     PkObjs.zuriels_robe_top,
                     PkObjs.zuriels_robe_bottom,
+                    PkObjs.accursed_sceptre,
                 )
             for (obj in gear) {
                 stock += stock(obj, count = 100, restockCycles = 25)

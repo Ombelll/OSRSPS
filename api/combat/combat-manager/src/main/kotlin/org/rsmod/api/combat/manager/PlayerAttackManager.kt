@@ -22,6 +22,7 @@ import org.rsmod.api.combat.commons.types.RangedAttackType
 import org.rsmod.api.combat.formulas.AccuracyFormulae
 import org.rsmod.api.combat.formulas.MaxHitFormulae
 import org.rsmod.api.config.refs.npcs
+import org.rsmod.api.config.refs.objs
 import org.rsmod.api.config.refs.params
 import org.rsmod.api.config.refs.spotanims
 import org.rsmod.api.config.refs.stats
@@ -488,6 +489,13 @@ constructor(
     private fun PathingEntity.isMaxHitDummy(): Boolean =
         this is Npc && id == npcs.test_combat_dummy_maxhit.id
 
+    // Revenant/wilderness-wapens: +50% max hit zolang je in de Wilderness staat.
+    private fun Player.inWilderness(): Boolean {
+        val x = coords.x
+        val z = coords.z
+        return x in 2944..3391 && z in 3520..4351
+    }
+
     public fun rollMeleeDamage(
         source: Player,
         target: PathingEntity,
@@ -513,7 +521,9 @@ constructor(
         if (!successfulAccuracyRoll) {
             return 0
         }
-        return rollMeleeMaxHit(source, target, attackType, attackStyle, maxHitMultiplier)
+        val wildMult =
+            if (source.inWilderness() && attack.weapon?.id == objs.ursine_chainmace.id) 1.5 else 1.0
+        return rollMeleeMaxHit(source, target, attackType, attackStyle, maxHitMultiplier * wildMult)
     }
 
     /**
@@ -769,12 +779,14 @@ constructor(
         if (!successfulAccuracyRoll) {
             return 0
         }
+        val wildMult =
+            if (source.inWilderness() && attack.weapon.id == objs.webweaver_bow.id) 1.5 else 1.0
         return rollRangedMaxHit(
             source = source,
             target = target,
             attackType = attackType,
             attackStyle = attackStyle,
-            multiplier = maxHitMultiplier,
+            multiplier = maxHitMultiplier * wildMult,
             boltSpecDamage = boltSpecDamage,
         )
     }
