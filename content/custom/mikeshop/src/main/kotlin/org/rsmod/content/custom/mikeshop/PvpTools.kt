@@ -24,6 +24,7 @@ import org.rsmod.plugin.scripts.ScriptContext
 
 private val PK_READY_TILE: CoordGrid = CoordGrid(0, 48, 54, 15, 40)
 private val PK_DUEL_SAFE_TILE: CoordGrid = CoordGrid(0, 48, 54, 15, 61)
+private val FIGHT_PIT_TILE: CoordGrid = CoordGrid(0, 48, 55, 20, 6) // 3092,3526 - lage wild bij Edge
 private val PK_DUEL_WILD_TILE: CoordGrid = CoordGrid(0, 48, 55, 15, 2)
 
 class PvpTools
@@ -93,6 +94,18 @@ constructor(
                     total += objTypes[obj].cost.toLong() * obj.count.coerceAtLeast(1)
                 }
                 player.mes("Je riskeert momenteel ongeveer ${"%,d".format(total)} gp aan items.")
+            }
+        }
+
+        onCommand("duel") {
+            desc = "Teleporteer naar de Edgeville fight-pit voor een directe 1v1 (beiden ::duel)"
+            cheat {
+                if (!player.requirePvpWorld()) return@cheat
+                player.sendPvpPlayerOps(pvpWorld)
+                protectedAccess.launch(player) {
+                    telejump(FIGHT_PIT_TILE)
+                    mes("Fight-pit (lage wild): zodra je maat ook ::duel doet, sla erop los!")
+                }
             }
         }
 
