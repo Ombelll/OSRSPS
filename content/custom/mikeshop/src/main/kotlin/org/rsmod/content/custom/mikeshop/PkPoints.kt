@@ -78,18 +78,22 @@ constructor(
         when (pick) {
             1 -> coinsMenu()
             2 -> claimReward("5x super combat potion", cost = 15, obj = PkObjs.super_combat, count = 5)
-            3 -> claimReward("Dragon claws", cost = 50, obj = PkObjs.dragon_claws)
+            3 -> combatGearMenu()
             4 -> cosmeticsMenu()
         }
     }
 
     private suspend fun ProtectedAccess.coinsMenu() {
         val pick =
-            choice3(
+            choice5(
                 "250,000 coins (10 pts)",
                 1,
                 "1,000,000 coins (35 pts)",
                 2,
+                "5,000,000 coins (150 pts)",
+                3,
+                "10,000,000 coins (280 pts)",
+                4,
                 "Back",
                 0,
                 title = "PK Point Shop - Coins",
@@ -97,6 +101,31 @@ constructor(
         when (pick) {
             1 -> claimReward("250,000 coins", cost = 10, obj = objs.coins, count = 250_000)
             2 -> claimReward("1,000,000 coins", cost = 35, obj = objs.coins, count = 1_000_000)
+            3 -> claimReward("5,000,000 coins", cost = 150, obj = objs.coins, count = 5_000_000)
+            4 -> claimReward("10,000,000 coins", cost = 280, obj = objs.coins, count = 10_000_000)
+        }
+    }
+
+    private suspend fun ProtectedAccess.combatGearMenu() {
+        val pick =
+            choice5(
+                "Dragon claws (50 pts)",
+                1,
+                "Voidwaker (75 pts)",
+                2,
+                "Armadyl godsword (60 pts)",
+                3,
+                "Dragon warhammer (40 pts)",
+                4,
+                "Back",
+                0,
+                title = "PK Combat Gear - you have ${player.pkPoints} points",
+            )
+        when (pick) {
+            1 -> claimReward("Dragon claws", cost = 50, obj = PkObjs.dragon_claws)
+            2 -> claimReward("Voidwaker", cost = 75, obj = PkObjs.voidwaker)
+            3 -> claimReward("Armadyl godsword", cost = 60, obj = PkObjs.armadyl_godsword)
+            4 -> claimReward("Dragon warhammer", cost = 40, obj = PkObjs.dragon_warhammer)
         }
     }
 

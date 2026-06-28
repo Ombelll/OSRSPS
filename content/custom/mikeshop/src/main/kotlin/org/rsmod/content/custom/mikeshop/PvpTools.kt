@@ -25,6 +25,16 @@ import org.rsmod.plugin.scripts.ScriptContext
 private val PK_READY_TILE: CoordGrid = CoordGrid(0, 48, 54, 15, 40)
 private val PK_DUEL_SAFE_TILE: CoordGrid = CoordGrid(0, 48, 54, 15, 61)
 private val FIGHT_PIT_TILE: CoordGrid = CoordGrid(0, 48, 55, 20, 6) // 3092,3526 - lage wild bij Edge
+
+// Wilderness-obelisk bestemmingen: spots in de geladen Edgeville-wild (::obelisk hopt random rond).
+private val OBELISK_SPOTS: List<CoordGrid> =
+    listOf(
+        CoordGrid(3087, 3527),
+        CoordGrid(3095, 3540),
+        CoordGrid(3075, 3545),
+        CoordGrid(3100, 3555),
+        CoordGrid(3070, 3535),
+    )
 private val PK_DUEL_WILD_TILE: CoordGrid = CoordGrid(0, 48, 55, 15, 2)
 
 class PvpTools
@@ -94,6 +104,18 @@ constructor(
                     total += objTypes[obj].cost.toLong() * obj.count.coerceAtLeast(1)
                 }
                 player.mes("Je riskeert momenteel ongeveer ${"%,d".format(total)} gp aan items.")
+            }
+        }
+
+        onCommand("obelisk") {
+            desc = "Wilderness-obelisk: hop naar een willekeurige andere wild-locatie"
+            cheat {
+                if (!player.requirePvpWorld()) return@cheat
+                val dest = OBELISK_SPOTS.random()
+                protectedAccess.launch(player) {
+                    telejump(dest)
+                    mes("De obelisk verplaatst je naar een andere plek in de Wilderness!")
+                }
             }
         }
 
