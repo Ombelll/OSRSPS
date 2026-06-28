@@ -148,15 +148,24 @@ constructor(
                 if (victimStreakLost > 1) " Your streak of $victimStreakLost is over!" else ""
         )
 
-        // Humiliation broadcast (Engels) naar alle online spelers; extra bij een bounty-claim.
+        // Humiliation broadcast (Engels) naar alle online spelers; met de rang van de killer
+        // ervoor en een extra label bij een bounty-claim.
+        val killerTitle = PvpKillTracker.pkTitle(killer.pkKills)
         val bountyNote = if (result.bountyClaimed) " [BOUNTY CLAIMED!]" else ""
         val taunt =
             HUMILIATION_LINES.random()
                 .replace("{killer}", killer.displayName)
                 .replace("{victim}", victim.displayName)
         for (online in players) {
-            online.mes("[PK] $taunt$bountyNote")
+            online.mes("[PK] [$killerTitle] $taunt$bountyNote")
         }
+
+        // Revenge/grudge: je killer wordt automatisch je bounty-target - terugpakken geeft bonus.
+        pvpKills.setBounty(victim.displayName, killer.displayName)
+        victim.mes(
+            "Revenge! ${killer.displayName} is now your bounty target - " +
+                "kill them back for bonus PK points."
+        )
 
         // Killstreak-aura + escalatie bij mijlpalen (5, 10, 15, ...): rode glow op de killer.
         if (result.streak >= 5 && result.streak % 5 == 0) {

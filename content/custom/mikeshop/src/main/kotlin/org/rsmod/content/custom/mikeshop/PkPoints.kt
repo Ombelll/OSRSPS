@@ -43,6 +43,7 @@ constructor(
                 val name = player.displayName
                 val kd = if (player.pkDeaths == 0) player.pkKills.toDouble() else player.pkKills.toDouble() / player.pkDeaths
                 player.mes("--- PK stats for $name ---")
+                player.mes("Rank: ${PvpKillTracker.pkTitle(player.pkKills)}")
                 player.mes("Kills: ${player.pkKills}")
                 player.mes("Deaths: ${player.pkDeaths} (KD: ${String.format(Locale.ROOT, "%.2f", kd)})")
                 player.mes(
@@ -56,6 +57,30 @@ constructor(
         onCommand("pkspend") {
             desc = "Spend PK points on rewards"
             cheat { protectedAccess.launch(player) { spendMenu() } }
+        }
+
+        onCommand("pktop") {
+            desc = "Toon de PK-leaderboard (top killers + onderlinge score)"
+            cheat {
+                val board = tracker.leaderboard(10)
+                if (board.isEmpty()) {
+                    player.mes("Nog geen PK-kills sinds de server-start.")
+                    return@cheat
+                }
+                player.mes("--- PK Leaderboard ---")
+                board.forEachIndexed { i, e ->
+                    player.mes(
+                        "${i + 1}. ${e.name} [${PvpKillTracker.pkTitle(e.kills)}] - " +
+                            "${e.kills} kills (best streak ${e.bestStreak})"
+                    )
+                }
+                if (board.size >= 2) {
+                    val a = board[0]
+                    val b = board[1]
+                    val (aWins, bWins) = tracker.headToHead(a.name, b.name)
+                    player.mes("Head-to-head: ${a.name} $aWins - $bWins ${b.name}")
+                }
+            }
         }
     }
 

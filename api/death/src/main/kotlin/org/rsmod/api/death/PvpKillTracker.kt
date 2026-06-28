@@ -22,9 +22,18 @@ public class PvpKillTracker {
         val bountyClaimed: Boolean,
     )
 
+    public data class LeaderEntry(val name: String, val kills: Int, val bestStreak: Int)
+
     private val streaks = ConcurrentHashMap<String, Int>()
     private val bestStreaks = ConcurrentHashMap<String, Int>()
     private val farm = ConcurrentHashMap<String, FarmEntry>()
+
+    // Leaderboard-state (in-memory, vanaf server-start): kill-totalen + display-naam per key.
+    private val totalKills = ConcurrentHashMap<String, Int>()
+    private val displayNames = ConcurrentHashMap<String, String>()
+
+    // Head-to-head: "killerKey>victimKey" -> hoe vaak killer dit slachtoffer versloeg.
+    private val h2h = ConcurrentHashMap<String, Int>()
 
     // Bounty-target: killer-key (lowercase) -> target display-naam. Killen van je target geeft bonus.
     private val bountyTargets = ConcurrentHashMap<String, String>()
@@ -57,6 +66,13 @@ public class PvpKillTracker {
         streaks[key] = newStreak
         val best = max(bestStreaks[key] ?: 0, newStreak)
         bestStreaks[key] = best
+
+        // Leaderboard + head-to-head bijwerken.
+        val vkey = victim.lowercase()
+        totalKills[key] = currentKills + 1
+        displayNames[key] = killer
+        displayNames[vkey] = victim
+        h2h["$key>$vkey"] = (h2h["$key>$vkey"] ?: 0) + 1
 
         val farmKey = "$key>${victim.lowercase()}"
         val now = System.currentTimeMillis()
@@ -108,8 +124,33 @@ public class PvpKillTracker {
 
     public fun bestStreak(name: String): Int = bestStreaks[name.lowercase()] ?: 0
 
-    private companion object {
+    /** Top-killers sinds server-start, gesorteerd op kills (aflopend). */
+    public fun leaderboard(limit: Int = 10): List<LeaderEntry> =
+        totalKills.entries
+            .sortedByDescending { it.value }
+            .take(limit)
+            .map { LeaderEntry(displayNames[it.key] ?: it.key, it.value, bestStreaks[it.key] ?: 0) }
+
+    /** Onderlinge score: (hoe vaak a -> b versloeg, hoe vaak b -> a versloeg). */
+    public fun headToHead(a: String, b: String): Pair<Int, Int> {
+        val ak = a.lowercase()
+        val bk = b.lowercase()
+        return (h2h["$ak>$bk"] ?: 0) to (h2h["$bk>$ak"] ?: 0)
+    }
+
+    public companion object {
         private const val FARM_DECAY_MS = 120_000L
         private const val BOUNTY_BONUS = 10
+
+        /** PK-rang/titel afgeleid van het totaal aantal kills. */
+        public fun pkTitle(kills: Int): String =
+            when {
+                kills >= 300 -> "Legend"
+                kills >= 150 -> "Warlord"
+                kills >= 75 -> "Maniac"
+                kills >= 25 -> "Brutal"
+                kills >= 5 -> "Killer"
+                else -> "Novice"
+            }
     }
 }
