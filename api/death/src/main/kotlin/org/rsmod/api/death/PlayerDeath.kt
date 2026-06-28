@@ -6,8 +6,10 @@ import org.rsmod.api.config.constants
 import org.rsmod.api.config.refs.components
 import org.rsmod.api.config.refs.jingles
 import org.rsmod.api.config.refs.midis
+import org.rsmod.api.config.refs.objs
 import org.rsmod.api.config.refs.queues
 import org.rsmod.api.config.refs.seqs
+import org.rsmod.api.config.refs.spotanims
 import org.rsmod.api.config.refs.varbits
 import org.rsmod.api.config.refs.varps
 import org.rsmod.api.player.deathResetTimers
@@ -25,6 +27,33 @@ import org.rsmod.game.inv.Inventory
 import org.rsmod.game.type.obj.ObjTypeList
 import org.rsmod.game.type.stat.StatTypeList
 import org.rsmod.map.CoordGrid
+
+// Risk-gebaseerde beloning: 1 bonus-punt per RISK_PER_POINT gp dat het slachtoffer riskeerde.
+private const val RISK_PER_POINT = 250_000L
+private const val RISK_BONUS_CAP = 50
+
+// Engelse "humiliation" broadcasts; {killer}/{victim} worden ingevuld. Random gekozen per kill.
+private val HUMILIATION_LINES =
+    listOf(
+        "{killer} humiliated {victim} in the Wilderness!",
+        "{killer} sent {victim} crawling back to Lumbridge!",
+        "{victim} got absolutely destroyed by {killer}!",
+        "{killer} made {victim} drop everything and weep!",
+        "{victim} was no match for {killer} - embarrassing!",
+        "{killer} just clapped {victim} into next week!",
+        "{victim} got farmed by {killer}. Skill issue!",
+        "{killer} ended {victim}'s entire PK career!",
+    )
+
+// Escalerende killstreak-teksten (index = streak/5 - 1).
+private val STREAK_LINES =
+    listOf(
+        "they're heating up!",
+        "they're on a RAMPAGE!",
+        "they're UNSTOPPABLE!",
+        "someone PLEASE stop them!",
+        "they have become a LIVING LEGEND!",
+    )
 
 @Singleton
 public class PlayerDeath
@@ -100,34 +129,71 @@ constructor(
         val victimStreakLost = pvpKills.endStreak(victim.displayName)
         val result =
             pvpKills.recordKill(killer.displayName, victim.displayName, killer.pkKills, killer.pkPoints)
+        // Risk-gebaseerde bonus: hoe meer gp het slachtoffer riskeerde, hoe meer punten.
+        val riskValue = victim.riskedValue()
+        val riskBonus = (riskValue / RISK_PER_POINT).toInt().coerceIn(0, RISK_BONUS_CAP)
+
         killer.pkKills = result.kills
-        killer.pkPoints = result.points
+        killer.pkPoints = result.points + riskBonus
         killer.pkBestStreak = maxOf(killer.pkBestStreak, result.bestStreak)
         val farmNote = if (result.farmed) " (verlaagd - anti-farm)" else ""
-        killer.mes("You killed ${victim.displayName}! +${result.gained} PK points$farmNote.")
+        val riskNote = if (riskBonus > 0) " (+$riskBonus risk bonus)" else ""
+        killer.mes("You killed ${victim.displayName}! +${result.gained}$riskNote PK points$farmNote.")
         killer.mes(
             "Streak: ${result.streak} (best: ${killer.pkBestStreak}). " +
-                "Total: ${result.points} PK points (::pkspend)."
+                "Total: ${killer.pkPoints} PK points (::pkspend)."
         )
         victim.mes(
             "You were killed by ${killer.displayName}." +
                 if (victimStreakLost > 1) " Your streak of $victimStreakLost is over!" else ""
         )
-        // Kill-feed: elke kill naar alle online spelers (extra melding bij een bounty-claim).
-        val bountyNote = if (result.bountyClaimed) " [BOUNTY CLAIMED! +bonus]" else ""
+
+        // Humiliation broadcast (Engels) naar alle online spelers; extra bij een bounty-claim.
+        val bountyNote = if (result.bountyClaimed) " [BOUNTY CLAIMED!]" else ""
+        val taunt =
+            HUMILIATION_LINES.random()
+                .replace("{killer}", killer.displayName)
+                .replace("{victim}", victim.displayName)
         for (online in players) {
-            online.mes("[PK] ${killer.displayName} killed ${victim.displayName}!$bountyNote")
+            online.mes("[PK] $taunt$bountyNote")
         }
-        // Broadcast bij streak-mijlpalen (5, 10, 15, ...).
+
+        // Killstreak-aura + escalatie bij mijlpalen (5, 10, 15, ...): rode glow op de killer.
         if (result.streak >= 5 && result.streak % 5 == 0) {
+            killer.spotanim(spotanims.sp_attackglow_red, height = 92)
+            val tier = STREAK_LINES[(result.streak / 5 - 1).coerceIn(0, STREAK_LINES.lastIndex)]
             for (online in players) {
-                online.mes(
-                    "[PK] ${killer.displayName} is on a ${result.streak} killstreak! " +
-                        "Take them down for bonus glory!"
-                )
+                online.mes("[PK] ${killer.displayName} is on a ${result.streak} killstreak - $tier")
             }
         }
+
+        // PK loot-crate: random coins gedropt bij de killer (klein jackpot-kansje).
+        val lootRoll = (1..100).random()
+        val lootCoins =
+            when {
+                lootRoll <= 5 -> (2_000_000..5_000_000).random()
+                lootRoll <= 25 -> (500_000..1_500_000).random()
+                else -> (50_000..400_000).random()
+            }
+        objRepo.add(InvObj(objs.coins, lootCoins), killer.coords, constants.lootdrop_duration, killer)
+        val crateNote = if (lootRoll <= 5) " JACKPOT!" else ""
+        killer.mes("Loot crate:$crateNote ${"%,d".format(lootCoins)} coins dropped at your feet!")
+
         return killer
+    }
+
+    /** Geschatte gp-waarde van alles wat de speler droeg + in de inventory had (de "risk"). */
+    private fun Player.riskedValue(): Long {
+        var total = 0L
+        for (slot in inv.indices) {
+            val obj = inv[slot] ?: continue
+            total += objTypes[obj].cost.toLong() * obj.count.coerceAtLeast(1)
+        }
+        for (slot in worn.indices) {
+            val obj = worn[slot] ?: continue
+            total += objTypes[obj].cost.toLong() * obj.count.coerceAtLeast(1)
+        }
+        return total
     }
 
     private fun ProtectedAccess.dropPvpItems(killer: Player, deathCoords: CoordGrid) {
