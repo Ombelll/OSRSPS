@@ -11,6 +11,7 @@ import org.rsmod.api.player.protect.ProtectedAccess
 import org.rsmod.api.player.protect.ProtectedAccessLauncher
 import org.rsmod.api.player.vars.intVarp
 import org.rsmod.api.script.onCommand
+import org.rsmod.api.script.onPlayerLogin
 import org.rsmod.game.entity.Player
 import org.rsmod.game.type.obj.ObjType
 import org.rsmod.plugin.scripts.PluginScript
@@ -37,6 +38,14 @@ constructor(
     private var Player.pkBestStreak by intVarp(varps.mike_pk_best_streak)
 
     override fun ScriptContext.startup() {
+        // Seed de leaderboard met je lifetime-stats bij login, zodat ::pktop ook spelers toont
+        // die deze sessie nog niet gekilld hebben (en niet alleen kills sinds server-start).
+        onPlayerLogin {
+            if (player.pkKills > 0 || player.pkBestStreak > 0) {
+                tracker.seed(player.displayName, player.pkKills, player.pkBestStreak)
+            }
+        }
+
         onCommand("pkpoints") {
             desc = "Show your PK kills, points and killstreak"
             cheat {

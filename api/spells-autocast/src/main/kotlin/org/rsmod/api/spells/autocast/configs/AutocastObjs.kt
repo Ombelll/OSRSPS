@@ -12,6 +12,7 @@ internal object AutocastObjEditor : ObjEditor() {
         addAutocast(objs.slayers_staff, objs.spell_crumble_undead, objs.spell_magic_dart)
         addAutocast(objs.slayers_staff_e, objs.spell_crumble_undead, objs.spell_magic_dart)
         addAutocast(objs.thammarons_sceptre_a, objs.spell_flames_of_zamorak)
+        addAutocast(objs.accursed_sceptre, objs.spell_flames_of_zamorak)
         addAutocast(objs.accursed_sceptre_a, objs.spell_flames_of_zamorak)
 
         addAutocast(

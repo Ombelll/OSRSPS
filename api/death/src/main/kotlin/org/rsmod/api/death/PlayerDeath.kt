@@ -196,16 +196,23 @@ constructor(
         return killer
     }
 
-    /** Geschatte gp-waarde van alles wat de speler droeg + in de inventory had (de "risk"). */
+    /**
+     * Geschatte gp-waarde van wat de speler bij dood daadwerkelijk kan verliezen: alleen tradeable
+     * items tellen mee (untradeables blijven altijd bij het slachtoffer, zie [dropPvpItems]).
+     */
     private fun Player.riskedValue(): Long {
         var total = 0L
         for (slot in inv.indices) {
             val obj = inv[slot] ?: continue
-            total += objTypes[obj].cost.toLong() * obj.count.coerceAtLeast(1)
+            val type = objTypes[obj]
+            if (!type.tradeable) continue
+            total += type.cost.toLong() * obj.count.coerceAtLeast(1)
         }
         for (slot in worn.indices) {
             val obj = worn[slot] ?: continue
-            total += objTypes[obj].cost.toLong() * obj.count.coerceAtLeast(1)
+            val type = objTypes[obj]
+            if (!type.tradeable) continue
+            total += type.cost.toLong() * obj.count.coerceAtLeast(1)
         }
         return total
     }

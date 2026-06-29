@@ -124,6 +124,17 @@ public class PvpKillTracker {
 
     public fun bestStreak(name: String): Int = bestStreaks[name.lowercase()] ?: 0
 
+    /**
+     * Zet de persistente stats van een speler in de leaderboard (bij login). Zo telt ook iemand
+     * mee die deze sessie nog niet gekilld heeft, met z'n volledige lifetime kill-count.
+     */
+    public fun seed(name: String, kills: Int, bestStreak: Int) {
+        val key = name.lowercase()
+        displayNames[key] = name
+        totalKills[key] = max(totalKills[key] ?: 0, kills)
+        bestStreaks[key] = max(bestStreaks[key] ?: 0, bestStreak)
+    }
+
     /** Top-killers sinds server-start, gesorteerd op kills (aflopend). */
     public fun leaderboard(limit: Int = 10): List<LeaderEntry> =
         totalKills.entries

@@ -36,6 +36,7 @@ import org.rsmod.api.player.interact.PlayerInteractions
 import org.rsmod.api.player.interact.PlayerTInteractions
 import org.rsmod.api.player.output.soundSynth
 import org.rsmod.api.player.protect.clearPendingAction
+import org.rsmod.api.player.righthand
 import org.rsmod.api.player.stat.hitpoints
 import org.rsmod.api.player.stat.statAdvance
 import org.rsmod.api.random.GameRandom
@@ -47,6 +48,7 @@ import org.rsmod.game.entity.Player
 import org.rsmod.game.hit.Hit
 import org.rsmod.game.hit.HitType
 import org.rsmod.game.interact.InteractionOp
+import org.rsmod.game.inv.isType
 import org.rsmod.game.proj.ProjAnim
 import org.rsmod.game.type.obj.ObjType
 import org.rsmod.game.type.obj.ObjTypeList
@@ -1237,6 +1239,13 @@ constructor(
             )
         if (target.isMaxHitDummy()) {
             return hitRange.last // max-hit dummy toont altijd je max magic hit
+        }
+        // Accursed sceptre (revenant-wapen): +50% magic damage zolang je in de Wilderness staat.
+        val accursed =
+            source.righthand.isType(objs.accursed_sceptre) ||
+                source.righthand.isType(objs.accursed_sceptre_a)
+        if (accursed && source.inWilderness()) {
+            return random.of((hitRange.first * 3 / 2)..(hitRange.last * 3 / 2))
         }
         return random.of(hitRange)
     }
