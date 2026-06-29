@@ -135,6 +135,7 @@ constructor(
         val riskBonus =
             if (result.farmed) 0 else (riskValue / RISK_PER_POINT).toInt().coerceIn(0, RISK_BONUS_CAP)
 
+        val oldBestStreak = killer.pkBestStreak
         killer.pkKills = result.kills
         killer.pkPoints = result.points + riskBonus
         killer.pkBestStreak = maxOf(killer.pkBestStreak, result.bestStreak)
@@ -191,6 +192,36 @@ constructor(
             objRepo.add(InvObj(objs.coins, lootCoins), killer.coords, constants.lootdrop_duration, killer)
             val crateNote = if (lootRoll <= 5) " JACKPOT!" else ""
             killer.mes("Loot crate:$crateNote ${"%,d".format(lootCoins)} coins dropped at your feet!")
+        }
+
+        // Achievements: eenmalige mijlpalen. Kill-count exact -> elke drempel triggert precies 1x
+        // (kills lopen per 1 op); de streak-achievement via de oude best-streak (1x ooit).
+        val killAchievement =
+            when (result.kills) {
+                1 -> "First Blood" to 5
+                10 -> "Serial Killer" to 15
+                25 -> "Bloodthirsty" to 25
+                50 -> "Warlord" to 40
+                100 -> "Wilderness Legend" to 75
+                else -> null
+            }
+        if (killAchievement != null) {
+            val (name, bonus) = killAchievement
+            killer.pkPoints += bonus
+            for (online in players) {
+                online.mes(
+                    "[Achievement] ${killer.displayName} unlocked \"$name\"! (+$bonus PK points)"
+                )
+            }
+        }
+        if (result.streak == 10 && oldBestStreak < 10) {
+            killer.pkPoints += 30
+            for (online in players) {
+                online.mes(
+                    "[Achievement] ${killer.displayName} unlocked \"Untouchable\" - " +
+                        "a 10 killstreak! (+30 PK points)"
+                )
+            }
         }
 
         return killer
