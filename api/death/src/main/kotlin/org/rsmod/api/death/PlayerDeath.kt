@@ -130,8 +130,10 @@ constructor(
         val result =
             pvpKills.recordKill(killer.displayName, victim.displayName, killer.pkKills, killer.pkPoints)
         // Risk-gebaseerde bonus: hoe meer gp het slachtoffer riskeerde, hoe meer punten.
+        // Niet bij anti-farm (herhaald hetzelfde doelwit killen) -> anders oneindig farmbaar.
         val riskValue = victim.riskedValue()
-        val riskBonus = (riskValue / RISK_PER_POINT).toInt().coerceIn(0, RISK_BONUS_CAP)
+        val riskBonus =
+            if (result.farmed) 0 else (riskValue / RISK_PER_POINT).toInt().coerceIn(0, RISK_BONUS_CAP)
 
         killer.pkKills = result.kills
         killer.pkPoints = result.points + riskBonus
@@ -177,16 +179,19 @@ constructor(
         }
 
         // PK loot-crate: random coins gedropt bij de killer (klein jackpot-kansje).
-        val lootRoll = (1..100).random()
-        val lootCoins =
-            when {
-                lootRoll <= 5 -> (2_000_000..5_000_000).random()
-                lootRoll <= 25 -> (500_000..1_500_000).random()
-                else -> (50_000..400_000).random()
-            }
-        objRepo.add(InvObj(objs.coins, lootCoins), killer.coords, constants.lootdrop_duration, killer)
-        val crateNote = if (lootRoll <= 5) " JACKPOT!" else ""
-        killer.mes("Loot crate:$crateNote ${"%,d".format(lootCoins)} coins dropped at your feet!")
+        // Niet bij anti-farm (zelfde doelwit herhaald) -> anders een oneindige coin-bron.
+        if (!result.farmed) {
+            val lootRoll = (1..100).random()
+            val lootCoins =
+                when {
+                    lootRoll <= 5 -> (2_000_000..5_000_000).random()
+                    lootRoll <= 25 -> (500_000..1_500_000).random()
+                    else -> (50_000..400_000).random()
+                }
+            objRepo.add(InvObj(objs.coins, lootCoins), killer.coords, constants.lootdrop_duration, killer)
+            val crateNote = if (lootRoll <= 5) " JACKPOT!" else ""
+            killer.mes("Loot crate:$crateNote ${"%,d".format(lootCoins)} coins dropped at your feet!")
+        }
 
         return killer
     }
